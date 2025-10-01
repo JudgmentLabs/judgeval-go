@@ -13,7 +13,6 @@ import (
 	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
 	"github.com/JudgmentLabs/judgeval-go/pkg/scorers"
 	"github.com/JudgmentLabs/judgeval-go/pkg/tracer/exporters"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -61,26 +60,11 @@ func WithEnableEvaluation(enableEvaluation bool) TracerConfigurationOptions {
 	}
 }
 
-func NewTracerConfiguration(options ...TracerConfigurationOptions) TracerConfiguration {
-	config := &TracerConfiguration{
-		APIURL:           env.JudgmentAPIURL,
-		APIKey:           env.JudgmentAPIKey,
-		OrganizationID:   env.JudgmentOrgID,
-		EnableEvaluation: true,
-	}
-
-	for _, option := range options {
-		option(config)
-	}
-
-	return *config
-}
-
 type ISerializer interface {
 	Serialize(obj interface{}) string
 }
 
-type BaseTracer struct {
+type baseTracer struct {
 	configuration TracerConfiguration
 	apiClient     *api.Client
 	serializer    ISerializer
@@ -88,44 +72,7 @@ type BaseTracer struct {
 	tracer        trace.Tracer
 }
 
-func NewBaseTracer(config TracerConfiguration, serializer ISerializer, initialize bool) *BaseTracer {
-	if config.APIURL == "" {
-		panic("Configuration APIURL cannot be empty")
-	}
-	if serializer == nil {
-		panic("Serializer cannot be nil")
-	}
-
-	apiClient := api.NewClient(config.APIURL, config.APIKey, config.OrganizationID)
-	projectID := resolveProjectID(apiClient, config.ProjectName)
-
-	if projectID == "" {
-		logger.Error("Failed to resolve project %s, please create it first at https://app.judgmentlabs.ai/org/%s/projects. Skipping Judgment export.",
-			config.ProjectName, config.OrganizationID)
-	}
-
-	tracer := otel.Tracer(TracerName)
-
-	bt := &BaseTracer{
-		configuration: config,
-		apiClient:     apiClient,
-		serializer:    serializer,
-		projectID:     projectID,
-		tracer:        tracer,
-	}
-
-	if initialize {
-		bt.Initialize()
-	}
-
-	return bt
-}
-
-func (bt *BaseTracer) Initialize() {
-
-}
-
-func (bt *BaseTracer) GetSpanExporter() sdktrace.SpanExporter {
+func (bt *baseTracer) GetSpanExporter() sdktrace.SpanExporter {
 	if bt.projectID == "" {
 		logger.Error("Project not resolved; cannot create exporter, returning NoOpSpanExporter")
 		return exporters.NewNoOpSpanExporter()
@@ -133,19 +80,19 @@ func (bt *BaseTracer) GetSpanExporter() sdktrace.SpanExporter {
 	return bt.createJudgmentSpanExporter(bt.projectID)
 }
 
-func (bt *BaseTracer) SetSpanKind(span trace.Span, kind string) {
+func (bt *baseTracer) SetSpanKind(span trace.Span, kind string) {
 	if span.IsRecording() && kind != "" {
 		span.SetAttributes(attribute.String(AttributeKeys.JudgmentSpanKind, kind))
 	}
 }
 
-func (bt *BaseTracer) SetAttribute(span trace.Span, key string, value interface{}) {
+func (bt *baseTracer) SetAttribute(span trace.Span, key string, value interface{}) {
 	if span.IsRecording() {
 		span.SetAttributes(attribute.String(key, bt.serializer.Serialize(value)))
 	}
 }
 
-func (bt *BaseTracer) AsyncEvaluate(ctx context.Context, scorer scorers.BaseScorer, example *data.Example, model string) {
+func (bt *baseTracer) AsyncEvaluate(ctx context.Context, scorer scorers.BaseScorer, example *data.Example, model string) {
 	if !bt.configuration.EnableEvaluation {
 		return
 	}
@@ -169,7 +116,7 @@ func (bt *BaseTracer) AsyncEvaluate(ctx context.Context, scorer scorers.BaseScor
 	bt.enqueueEvaluation(evaluationRun)
 }
 
-func (bt *BaseTracer) AsyncTraceEvaluate(ctx context.Context, scorer scorers.BaseScorer, model string) {
+func (bt *baseTracer) AsyncTraceEvaluate(ctx context.Context, scorer scorers.BaseScorer, model string) {
 	if !bt.configuration.EnableEvaluation {
 		return
 	}
@@ -192,7 +139,7 @@ func (bt *BaseTracer) AsyncTraceEvaluate(ctx context.Context, scorer scorers.Bas
 	span.SetAttributes(attribute.String(AttributeKeys.PendingTraceEval, traceEvalJSON))
 }
 
-func (bt *BaseTracer) SetAttributes(span trace.Span, attributes map[string]interface{}) {
+func (bt *baseTracer) SetAttributes(span trace.Span, attributes map[string]interface{}) {
 	if attributes == nil {
 		return
 	}
@@ -206,54 +153,38 @@ func (bt *BaseTracer) SetAttributes(span trace.Span, attributes map[string]inter
 	}
 }
 
-func (bt *BaseTracer) SetLLMSpan(span trace.Span) {
+func (bt *baseTracer) SetLLMSpan(span trace.Span) {
 	bt.SetSpanKind(span, "llm")
 }
 
-func (bt *BaseTracer) SetToolSpan(span trace.Span) {
+func (bt *baseTracer) SetToolSpan(span trace.Span) {
 	bt.SetSpanKind(span, "tool")
 }
 
-func (bt *BaseTracer) SetGeneralSpan(span trace.Span) {
+func (bt *baseTracer) SetGeneralSpan(span trace.Span) {
 	bt.SetSpanKind(span, "span")
 }
 
-func (bt *BaseTracer) SetInput(span trace.Span, input interface{}) {
+func (bt *baseTracer) SetInput(span trace.Span, input interface{}) {
 	bt.SetAttribute(span, AttributeKeys.JudgmentInput, input)
 }
 
-func (bt *BaseTracer) SetOutput(span trace.Span, output interface{}) {
+func (bt *baseTracer) SetOutput(span trace.Span, output interface{}) {
 	bt.SetAttribute(span, AttributeKeys.JudgmentOutput, output)
 }
 
-func (bt *BaseTracer) GetTracer() trace.Tracer {
+func (bt *baseTracer) GetTracer() trace.Tracer {
 	return bt.tracer
 }
 
-func (bt *BaseTracer) Span(ctx context.Context, spanName string) (trace.Span, context.Context) {
+func (bt *baseTracer) Span(ctx context.Context, spanName string) (trace.Span, context.Context) {
 	spanCtx, span := bt.tracer.Start(ctx, spanName)
 
 	spanCtx = trace.ContextWithSpan(spanCtx, span)
 	return span, spanCtx
 }
 
-func resolveProjectID(apiClient *api.Client, projectName string) string {
-	request := &models.ResolveProjectNameRequest{
-		ProjectName: projectName,
-	}
-
-	response, err := apiClient.ProjectsResolve(request)
-	if err != nil {
-		return ""
-	}
-
-	if response.ProjectId != "" {
-		return response.ProjectId
-	}
-	return ""
-}
-
-func (bt *BaseTracer) createJudgmentSpanExporter(projectID string) sdktrace.SpanExporter {
+func (bt *baseTracer) createJudgmentSpanExporter(projectID string) sdktrace.SpanExporter {
 
 	endpoint := bt.configuration.APIURL
 	if endpoint[len(endpoint)-1] != '/' {
@@ -261,15 +192,20 @@ func (bt *BaseTracer) createJudgmentSpanExporter(projectID string) sdktrace.Span
 	}
 	endpoint += "otel/v1/traces"
 
-	return exporters.NewJudgmentSpanExporterBuilder().
+	exporter, err := exporters.NewJudgmentSpanExporterBuilder().
 		Endpoint(endpoint).
 		APIKey(bt.configuration.APIKey).
 		OrganizationID(bt.configuration.OrganizationID).
 		ProjectID(projectID).
 		Build()
+	if err != nil {
+		logger.Error("Failed to create Judgment span exporter: %v", err)
+		return exporters.NewNoOpSpanExporter()
+	}
+	return exporter
 }
 
-func (bt *BaseTracer) createEvaluationRun(scorer scorers.BaseScorer, example *data.Example, model, traceID, spanID string) *data.ExampleEvaluationRun {
+func (bt *baseTracer) createEvaluationRun(scorer scorers.BaseScorer, example *data.Example, model, traceID, spanID string) *data.ExampleEvaluationRun {
 	runID := fmt.Sprintf("async_evaluate_%s", spanID)
 	if spanID == "" {
 		runID = fmt.Sprintf("async_evaluate_%d", time.Now().UnixMilli())
@@ -292,7 +228,7 @@ func (bt *BaseTracer) createEvaluationRun(scorer scorers.BaseScorer, example *da
 	)
 }
 
-func (bt *BaseTracer) createTraceEvaluationRun(scorer scorers.BaseScorer, model, traceID, spanID string) *data.TraceEvaluationRun {
+func (bt *baseTracer) createTraceEvaluationRun(scorer scorers.BaseScorer, model, traceID, spanID string) *data.TraceEvaluationRun {
 	evalName := fmt.Sprintf("async_trace_evaluate_%s", spanID)
 	if spanID == "" {
 		evalName = fmt.Sprintf("async_trace_evaluate_%d", time.Now().UnixMilli())
@@ -313,7 +249,7 @@ func (bt *BaseTracer) createTraceEvaluationRun(scorer scorers.BaseScorer, model,
 	})
 }
 
-func (bt *BaseTracer) enqueueEvaluation(evaluationRun *data.ExampleEvaluationRun) {
+func (bt *baseTracer) enqueueEvaluation(evaluationRun *data.ExampleEvaluationRun) {
 	_, err := bt.apiClient.AddToRunEvalQueue(evaluationRun.ExampleEvaluationRun)
 	if err != nil {
 		logger.Error("Failed to enqueue evaluation run: %v", err)

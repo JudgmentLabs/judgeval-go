@@ -2,7 +2,10 @@ package tracer
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api"
+	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api/models"
 	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
 	"github.com/JudgmentLabs/judgeval-go/pkg/version"
 	"go.opentelemetry.io/otel"
@@ -16,7 +19,7 @@ const (
 )
 
 type Tracer struct {
-	*BaseTracer
+	*baseTracer
 	tracerProvider *sdktrace.TracerProvider
 }
 
@@ -46,7 +49,7 @@ func WithInitialize(initialize bool) TracerOptions {
 	}
 }
 
-func NewTracer(options ...TracerOptions) *Tracer {
+func NewTracer(options ...TracerOptions) (*Tracer, error) {
 	config := &TracerConfig{
 		Serializer: NewJSONSerializer(),
 		Initialize: true,
@@ -57,20 +60,39 @@ func NewTracer(options ...TracerOptions) *Tracer {
 	}
 
 	if config.Configuration.APIURL == "" {
-		panic("Configuration is required")
+		return nil, fmt.Errorf("configuration is required")
+	}
+	if config.Serializer == nil {
+		return nil, fmt.Errorf("serializer cannot be nil")
 	}
 
-	baseTracer := NewBaseTracer(config.Configuration, config.Serializer, false)
+	apiClient := api.NewClient(config.Configuration.APIURL, config.Configuration.APIKey, config.Configuration.OrganizationID)
+	projectID := resolveProjectID(apiClient, config.Configuration.ProjectName)
 
-	tracer := &Tracer{
-		BaseTracer: baseTracer,
+	if projectID == "" {
+		logger.Error("Failed to resolve project %s, please create it first at https://app.judgmentlabs.ai/org/%s/projects. Skipping Judgment export.",
+			config.Configuration.ProjectName, config.Configuration.OrganizationID)
+	}
+
+	tracer := otel.Tracer(TracerName)
+
+	baseTracer := &baseTracer{
+		configuration: config.Configuration,
+		apiClient:     apiClient,
+		serializer:    config.Serializer,
+		projectID:     projectID,
+		tracer:        tracer,
+	}
+
+	tracerInstance := &Tracer{
+		baseTracer: baseTracer,
 	}
 
 	if config.Initialize {
-		tracer.Initialize()
+		tracerInstance.Initialize()
 	}
 
-	return tracer
+	return tracerInstance, nil
 }
 
 func (t *Tracer) Initialize() {
@@ -113,4 +135,20 @@ func (t *Tracer) Flush(ctx context.Context) error {
 
 func (t *Tracer) GetTracerProvider() *sdktrace.TracerProvider {
 	return t.tracerProvider
+}
+
+func resolveProjectID(apiClient *api.Client, projectName string) string {
+	request := &models.ResolveProjectNameRequest{
+		ProjectName: projectName,
+	}
+
+	response, err := apiClient.ProjectsResolve(request)
+	if err != nil {
+		return ""
+	}
+
+	if response.ProjectId != "" {
+		return response.ProjectId
+	}
+	return ""
 }

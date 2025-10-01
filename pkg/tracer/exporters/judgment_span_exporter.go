@@ -2,6 +2,7 @@ package exporters
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -49,19 +50,18 @@ func (b *JudgmentSpanExporterBuilder) ProjectID(projectID string) *JudgmentSpanE
 	return b
 }
 
-func (b *JudgmentSpanExporterBuilder) Build() *JudgmentSpanExporter {
-
+func (b *JudgmentSpanExporterBuilder) Build() (*JudgmentSpanExporter, error) {
 	if b.endpoint == "" {
-		panic("endpoint is required")
+		return nil, fmt.Errorf("endpoint is required")
 	}
 	if b.apiKey == "" {
-		panic("apiKey is required")
+		return nil, fmt.Errorf("apiKey is required")
 	}
 	if b.orgID == "" {
-		panic("organizationId is required")
+		return nil, fmt.Errorf("organizationId is required")
 	}
 	if b.projectID == "" {
-		panic("projectId is required")
+		return nil, fmt.Errorf("projectId is required")
 	}
 
 	client := &http.Client{
@@ -79,7 +79,7 @@ func (b *JudgmentSpanExporterBuilder) Build() *JudgmentSpanExporter {
 		otlptracehttp.WithHTTPClient(client),
 	)
 	if err != nil {
-		panic("Failed to create OTLP HTTP exporter: " + err.Error())
+		return nil, fmt.Errorf("failed to create OTLP HTTP exporter: %w", err)
 	}
 
 	return &JudgmentSpanExporter{
@@ -88,7 +88,7 @@ func (b *JudgmentSpanExporterBuilder) Build() *JudgmentSpanExporter {
 		apiKey:    b.apiKey,
 		orgID:     b.orgID,
 		projectID: b.projectID,
-	}
+	}, nil
 }
 
 func (j *JudgmentSpanExporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpan) error {
