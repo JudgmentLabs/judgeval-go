@@ -2,11 +2,10 @@ package exporters
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/JudgmentLabs/judgeval-go/pkg/utils"
+	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
@@ -66,7 +65,7 @@ func (b *JudgmentSpanExporterBuilder) Build() *JudgmentSpanExporter {
 	}
 
 	client := &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: 60 * time.Second,
 	}
 
 	delegate, err := otlptracehttp.New(
@@ -93,16 +92,16 @@ func (b *JudgmentSpanExporterBuilder) Build() *JudgmentSpanExporter {
 }
 
 func (j *JudgmentSpanExporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpan) error {
-	utils.DefaultLogger.Info(fmt.Sprintf("Exported %d spans", len(spans)))
+	logger.Info("JudgmentSpanExporter: Exported %d spans", len(spans))
 	return j.delegate.ExportSpans(ctx, spans)
 }
 
 func (j *JudgmentSpanExporter) Shutdown(ctx context.Context) error {
-	utils.DefaultLogger.Info(fmt.Sprintf("Shutting down exporter for project %s", j.projectID))
+	logger.Info("JudgmentSpanExporter: Shutting down exporter for project %s", j.projectID)
 	return j.delegate.Shutdown(ctx)
 }
 
 func (j *JudgmentSpanExporter) ForceFlush(ctx context.Context) error {
-	utils.DefaultLogger.Info(fmt.Sprintf("Force flushing spans for project %s", j.projectID))
+	logger.Info("JudgmentSpanExporter: Force flushing spans for project %s", j.projectID)
 	return nil
 }

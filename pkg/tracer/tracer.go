@@ -2,8 +2,8 @@ package tracer
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
 	"github.com/JudgmentLabs/judgeval-go/pkg/version"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -85,7 +85,7 @@ func (t *Tracer) Initialize() {
 		resource.WithFromEnv(),
 	)
 	if err != nil {
-		fmt.Printf("Failed to create resource: %v\n", err)
+		logger.Error("Failed to create resource: %v", err)
 		return
 	}
 

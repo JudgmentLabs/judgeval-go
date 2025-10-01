@@ -10,9 +10,9 @@ import (
 	"github.com/JudgmentLabs/judgeval-go/pkg/env"
 	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api"
 	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api/models"
+	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
 	"github.com/JudgmentLabs/judgeval-go/pkg/scorers"
 	"github.com/JudgmentLabs/judgeval-go/pkg/tracer/exporters"
-	"github.com/JudgmentLabs/judgeval-go/pkg/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -100,8 +100,8 @@ func NewBaseTracer(config TracerConfiguration, serializer ISerializer, initializ
 	projectID := resolveProjectID(apiClient, config.ProjectName)
 
 	if projectID == "" {
-		utils.DefaultLogger.Error(fmt.Sprintf("Failed to resolve project %s, please create it first at https://app.judgmentlabs.ai/org/%s/projects. Skipping Judgment export.",
-			config.ProjectName, config.OrganizationID))
+		logger.Error("Failed to resolve project %s, please create it first at https://app.judgmentlabs.ai/org/%s/projects. Skipping Judgment export.",
+			config.ProjectName, config.OrganizationID)
 	}
 
 	tracer := otel.Tracer(TracerName)
@@ -127,7 +127,7 @@ func (bt *BaseTracer) Initialize() {
 
 func (bt *BaseTracer) GetSpanExporter() sdktrace.SpanExporter {
 	if bt.projectID == "" {
-		utils.DefaultLogger.Error("Project not resolved; cannot create exporter, returning NoOpSpanExporter")
+		logger.Error("Project not resolved; cannot create exporter, returning NoOpSpanExporter")
 		return exporters.NewNoOpSpanExporter()
 	}
 	return bt.createJudgmentSpanExporter(bt.projectID)
@@ -145,40 +145,16 @@ func (bt *BaseTracer) SetAttribute(span trace.Span, key string, value interface{
 	}
 }
 
-func (bt *BaseTracer) AsyncEvaluate(scorer scorers.BaseScorer, example *data.Example, model string) {
-	if !bt.configuration.EnableEvaluation {
-		return
-	}
-
-	span := trace.SpanFromContext(context.Background())
-	utils.DefaultLogger.Info(fmt.Sprintf("DEBUG: AsyncEvaluate - Span found: %v, IsRecording: %v", span != nil, span.IsRecording()))
-
-	if !span.IsRecording() {
-		utils.DefaultLogger.Info("DEBUG: Span not recording, returning")
-		return
-	}
-
-	spanContext := span.SpanContext()
-	traceID := spanContext.TraceID().String()
-	spanID := spanContext.SpanID().String()
-
-	utils.DefaultLogger.Info(fmt.Sprintf("asyncEvaluate: project=%s, traceId=%s, spanId=%s, scorer=%s",
-		bt.configuration.ProjectName, traceID, spanID, scorer.GetName()))
-
-	evaluationRun := bt.createEvaluationRun(scorer, example, model, traceID, spanID)
-	bt.enqueueEvaluation(evaluationRun)
-}
-
-func (bt *BaseTracer) AsyncEvaluateWithContext(ctx context.Context, scorer scorers.BaseScorer, example *data.Example, model string) {
+func (bt *BaseTracer) AsyncEvaluate(ctx context.Context, scorer scorers.BaseScorer, example *data.Example, model string) {
 	if !bt.configuration.EnableEvaluation {
 		return
 	}
 
 	span := trace.SpanFromContext(ctx)
-	utils.DefaultLogger.Info(fmt.Sprintf("DEBUG: AsyncEvaluateWithContext - Span found: %v, IsRecording: %v", span != nil, span.IsRecording()))
+	logger.Debug("AsyncEvaluate - Span found: %v, IsRecording: %v", span != nil, span.IsRecording())
 
 	if !span.IsRecording() {
-		utils.DefaultLogger.Info("DEBUG: Span not recording, returning")
+		logger.Debug("Span not recording, returning")
 		return
 	}
 
@@ -186,23 +162,19 @@ func (bt *BaseTracer) AsyncEvaluateWithContext(ctx context.Context, scorer score
 	traceID := spanContext.TraceID().String()
 	spanID := spanContext.SpanID().String()
 
-	utils.DefaultLogger.Info(fmt.Sprintf("asyncEvaluate: project=%s, traceId=%s, spanId=%s, scorer=%s",
-		bt.configuration.ProjectName, traceID, spanID, scorer.GetName()))
+	logger.Info("asyncEvaluate: project=%s, traceId=%s, spanId=%s, scorer=%s",
+		bt.configuration.ProjectName, traceID, spanID, scorer.GetName())
 
 	evaluationRun := bt.createEvaluationRun(scorer, example, model, traceID, spanID)
 	bt.enqueueEvaluation(evaluationRun)
 }
 
-func (bt *BaseTracer) AsyncEvaluateWithDefaultModel(scorer scorers.BaseScorer, example *data.Example) {
-	bt.AsyncEvaluate(scorer, example, "")
-}
-
-func (bt *BaseTracer) AsyncTraceEvaluate(scorer scorers.BaseScorer, model string) {
+func (bt *BaseTracer) AsyncTraceEvaluate(ctx context.Context, scorer scorers.BaseScorer, model string) {
 	if !bt.configuration.EnableEvaluation {
 		return
 	}
 
-	span := trace.SpanFromContext(context.Background())
+	span := trace.SpanFromContext(ctx)
 	if !span.IsRecording() {
 		return
 	}
@@ -211,17 +183,13 @@ func (bt *BaseTracer) AsyncTraceEvaluate(scorer scorers.BaseScorer, model string
 	traceID := spanContext.TraceID().String()
 	spanID := spanContext.SpanID().String()
 
-	utils.DefaultLogger.Info(fmt.Sprintf("asyncTraceEvaluate: project=%s, traceId=%s, spanId=%s, scorer=%s",
-		bt.configuration.ProjectName, traceID, spanID, scorer.GetName()))
+	logger.Info("asyncTraceEvaluate: project=%s, traceId=%s, spanId=%s, scorer=%s",
+		bt.configuration.ProjectName, traceID, spanID, scorer.GetName())
 
 	evaluationRun := bt.createTraceEvaluationRun(scorer, model, traceID, spanID)
 
 	traceEvalJSON := bt.serializer.Serialize(evaluationRun)
 	span.SetAttributes(attribute.String(AttributeKeys.PendingTraceEval, traceEvalJSON))
-}
-
-func (bt *BaseTracer) AsyncTraceEvaluateWithDefaultModel(scorer scorers.BaseScorer) {
-	bt.AsyncTraceEvaluate(scorer, "")
 }
 
 func (bt *BaseTracer) SetAttributes(span trace.Span, attributes map[string]interface{}) {
@@ -348,7 +316,7 @@ func (bt *BaseTracer) createTraceEvaluationRun(scorer scorers.BaseScorer, model,
 func (bt *BaseTracer) enqueueEvaluation(evaluationRun *data.ExampleEvaluationRun) {
 	_, err := bt.apiClient.AddToRunEvalQueue(evaluationRun.ExampleEvaluationRun)
 	if err != nil {
-		utils.DefaultLogger.Error(fmt.Sprintf("Failed to enqueue evaluation run: %v", err))
+		logger.Error("Failed to enqueue evaluation run: %v", err)
 	}
 }
 
