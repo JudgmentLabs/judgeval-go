@@ -7,11 +7,11 @@ import (
 	"github.com/JudgmentLabs/judgeval-go/pkg/env"
 )
 
-type PromptScorer struct {
+type TracePromptScorer struct {
 	*BasePromptScorer
 }
 
-func Get(name string, opts ...ScorerOption) (*PromptScorer, error) {
+func GetTrace(name string, opts ...ScorerOption) (*TracePromptScorer, error) {
 	options := &ScorerOptions{
 		APIKey:         env.JudgmentAPIKey,
 		OrganizationID: env.JudgmentOrgID,
@@ -26,8 +26,8 @@ func Get(name string, opts ...ScorerOption) (*PromptScorer, error) {
 		return nil, err
 	}
 
-	if scorerConfig.IsTrace {
-		return nil, fmt.Errorf("scorer with name %s is not a PromptScorer", name)
+	if !scorerConfig.IsTrace {
+		return nil, fmt.Errorf("scorer with name %s is not a TracePromptScorer", name)
 	}
 
 	scorerOptions := parseScorerOptions(scorerConfig.Options)
@@ -36,9 +36,9 @@ func Get(name string, opts ...ScorerOption) (*PromptScorer, error) {
 		threshold = scorerConfig.Threshold
 	}
 
-	return &PromptScorer{
+	return &TracePromptScorer{
 		BasePromptScorer: NewBasePromptScorer(
-			data.PromptScorer,
+			data.TracePromptScorer,
 			name,
 			scorerConfig.Prompt,
 			threshold,
@@ -49,6 +49,6 @@ func Get(name string, opts ...ScorerOption) (*PromptScorer, error) {
 	}, nil
 }
 
-func (ps *PromptScorer) IsTrace() bool {
-	return false
+func (tps *TracePromptScorer) IsTrace() bool {
+	return true
 }

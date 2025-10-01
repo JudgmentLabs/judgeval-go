@@ -2,6 +2,7 @@ package prompt_scorer
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/JudgmentLabs/judgeval-go/pkg/data"
 	"github.com/JudgmentLabs/judgeval-go/pkg/env"
@@ -16,6 +17,25 @@ type BasePromptScorer struct {
 	options        map[string]float64
 	judgmentAPIKey string
 	organizationID string
+}
+
+type ScorerOptions struct {
+	APIKey         string
+	OrganizationID string
+}
+
+type ScorerOption func(*ScorerOptions)
+
+func WithAPIKey(apiKey string) ScorerOption {
+	return func(opts *ScorerOptions) {
+		opts.APIKey = apiKey
+	}
+}
+
+func WithOrganizationID(orgID string) ScorerOption {
+	return func(opts *ScorerOptions) {
+		opts.OrganizationID = orgID
+	}
 }
 
 func NewBasePromptScorer(
@@ -36,6 +56,26 @@ func NewBasePromptScorer(
 		judgmentAPIKey: judgmentAPIKey,
 		organizationID: organizationID,
 	}
+}
+
+func parseScorerOptions(options interface{}) map[string]float64 {
+	result := make(map[string]float64)
+	if options == nil {
+		return result
+	}
+
+	if optionsMap, ok := options.(map[string]interface{}); ok {
+		for k, v := range optionsMap {
+			if num, ok := v.(float64); ok {
+				result[k] = num
+			} else if str, ok := v.(string); ok {
+				if num, err := strconv.ParseFloat(str, 64); err == nil {
+					result[k] = num
+				}
+			}
+		}
+	}
+	return result
 }
 
 func ScorerExists(name, judgmentAPIKey, organizationID string) (bool, error) {
@@ -118,4 +158,23 @@ func (bps *BasePromptScorer) GetOptions() map[string]float64 {
 		result[k] = v
 	}
 	return result
+}
+
+func (bps *BasePromptScorer) GetScorerConfig() models.ScorerConfig {
+	config := bps.APIScorer.GetScorerConfig()
+
+	kwargs := make(map[string]interface{})
+	kwargs["prompt"] = bps.GetPrompt()
+	if bps.GetOptions() != nil {
+		kwargs["options"] = bps.GetOptions()
+	}
+
+	if bps.APIScorer.AdditionalProperties != nil {
+		for k, v := range bps.APIScorer.AdditionalProperties {
+			kwargs[k] = v
+		}
+	}
+
+	config.Kwargs = kwargs
+	return config
 }
