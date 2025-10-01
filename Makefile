@@ -1,6 +1,5 @@
 .PHONY: help format clean build generate-client run deps tidy
 
-# Default target
 .DEFAULT_GOAL := help
 
 help: ## Show this help message

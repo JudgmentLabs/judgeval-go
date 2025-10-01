@@ -4,6 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
+)
+
+const (
+	RESET  = "\033[0m"
+	RED    = "\033[31m"
+	YELLOW = "\033[33m"
+	GRAY   = "\033[90m"
 )
 
 type Level int
@@ -24,10 +32,21 @@ var levelNames = map[Level]string{
 	CRITICAL: "CRITICAL",
 }
 
-var level = WARNING // Default to WARNING level
+var levelColors = map[Level]string{
+	DEBUG:    GRAY,
+	INFO:     GRAY,
+	WARNING:  YELLOW,
+	ERROR:    RED,
+	CRITICAL: RED,
+}
+
+var level = WARNING
+var useColor = true
 
 func init() {
-	// Set log level from environment variable
+	noColor := os.Getenv("JUDGMENT_NO_COLOR")
+	useColor = noColor == ""
+
 	if levelStr := os.Getenv("JUDGMENT_LOG_LEVEL"); levelStr != "" {
 		SetLevelFromString(levelStr)
 	}
@@ -35,6 +54,10 @@ func init() {
 
 func SetLevel(l Level) {
 	level = l
+}
+
+func SetUseColor(enableColor bool) {
+	useColor = enableColor
 }
 
 func SetLevelFromString(levelStr string) {
@@ -60,7 +83,14 @@ func log(l Level, format string, args ...interface{}) {
 	}
 
 	message := fmt.Sprintf(format, args...)
-	fmt.Printf("[%s] %s\n", levelNames[l], message)
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	formattedMessage := fmt.Sprintf("%s - judgeval - %s - %s", timestamp, levelNames[l], message)
+
+	if useColor {
+		formattedMessage = levelColors[l] + formattedMessage + RESET
+	}
+
+	fmt.Println(formattedMessage)
 }
 
 func Debug(format string, args ...interface{}) {
