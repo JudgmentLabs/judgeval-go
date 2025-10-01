@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/JudgmentLabs/judgeval-go/src/env"
+	"github.com/JudgmentLabs/judgeval-go/pkg/env"
 )
 
 const (

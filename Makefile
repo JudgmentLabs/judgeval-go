@@ -13,8 +13,8 @@ format: ## Format code using gofmt
 clean: ## Clean build artifacts
 	rm -rf ./bin
 
-build: ## Build the project
-	go build -o ./bin/judgeval ./src
+build: ## Build the example application
+	go build -o ./bin/judgeval ./examples
 
 deps: ## Download dependencies
 	go mod download
@@ -26,9 +26,15 @@ generate-client: ## Generate API client from OpenAPI spec
 	python3 scripts/generate-client.py
 	make format
 
-run: ## Run the main application with environment variables
+run: ## Run the example application with environment variables
 	@if [ -f .env ]; then \
-		set -a && . ./.env && set +a && go run ./src; \
+		set -a && . ./.env && set +a && go run ./examples; \
 	else \
-		go run ./src; \
+		go run ./examples; \
 	fi
+
+test: ## Run tests
+	go test ./...
+
+install: ## Install the library (for local development)
+	go install ./...

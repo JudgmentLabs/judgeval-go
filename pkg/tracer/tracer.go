@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/JudgmentLabs/judgeval-go/src/env"
+	"github.com/JudgmentLabs/judgeval-go/pkg/version"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -80,7 +80,7 @@ func (t *Tracer) Initialize() {
 		resource.WithAttributes(
 			semconv.ServiceName(t.configuration.ProjectName),
 			semconv.TelemetrySDKName(TRACER_NAME),
-			semconv.TelemetrySDKVersion(env.JudgmentVersion),
+			semconv.TelemetrySDKVersion(version.Version),
 		),
 		resource.WithFromEnv(),
 	)

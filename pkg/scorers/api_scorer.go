@@ -1,8 +1,8 @@
 package scorers
 
 import (
-	"github.com/JudgmentLabs/judgeval-go/src/data"
-	"github.com/JudgmentLabs/judgeval-go/src/internal/api/models"
+	"github.com/JudgmentLabs/judgeval-go/pkg/data"
+	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api/models"
 )
 
 type APIScorer struct {

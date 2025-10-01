@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/JudgmentLabs/judgeval-go/src/utils"
+	"github.com/JudgmentLabs/judgeval-go/pkg/utils"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/trace"
 )

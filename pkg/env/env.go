@@ -9,7 +9,6 @@ var (
 	JudgmentDefaultGPTModel = getEnvVar("JUDGMENT_DEFAULT_GPT_MODEL", "gpt-4.1")
 	JudgmentNoColor         = getEnvVar("JUDGMENT_NO_COLOR")
 	JudgmentLogLevel        = getEnvVar("JUDGMENT_LOG_LEVEL", "warn")
-	JudgmentVersion         = "1.0.0"
 )
 
 func getEnvVar(varName string, defaultValue ...string) string {
