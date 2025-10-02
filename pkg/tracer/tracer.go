@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/JudgmentLabs/judgeval-go/pkg/env"
 	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api"
 	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api/models"
 	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
@@ -27,7 +28,7 @@ type TracerOptions func(*TracerConfig)
 
 type TracerConfig struct {
 	Configuration TracerConfiguration
-	Serializer    ISerializer
+	Serializer    SerializerFunc
 	Initialize    bool
 }
 
@@ -37,7 +38,7 @@ func WithConfiguration(config TracerConfiguration) TracerOptions {
 	}
 }
 
-func WithSerializer(serializer ISerializer) TracerOptions {
+func WithSerializer(serializer SerializerFunc) TracerOptions {
 	return func(tc *TracerConfig) {
 		tc.Serializer = serializer
 	}
@@ -51,7 +52,12 @@ func WithInitialize(initialize bool) TracerOptions {
 
 func NewTracer(options ...TracerOptions) (*Tracer, error) {
 	config := &TracerConfig{
-		Serializer: NewJSONSerializer(),
+		Configuration: TracerConfiguration{
+			APIURL:         env.JudgmentAPIURL,
+			APIKey:         env.JudgmentAPIKey,
+			OrganizationID: env.JudgmentOrgID,
+		},
+		Serializer: DefaultJSONSerializer,
 		Initialize: true,
 	}
 
@@ -60,7 +66,16 @@ func NewTracer(options ...TracerOptions) (*Tracer, error) {
 	}
 
 	if config.Configuration.APIURL == "" {
-		return nil, fmt.Errorf("configuration is required")
+		return nil, fmt.Errorf("configuration 'APIURL' is required")
+	}
+	if config.Configuration.APIKey == "" {
+		return nil, fmt.Errorf("configuration 'APIKey' is required")
+	}
+	if config.Configuration.OrganizationID == "" {
+		return nil, fmt.Errorf("configuration 'OrganizationID' is required")
+	}
+	if config.Configuration.ProjectName == "" {
+		return nil, fmt.Errorf("configuration 'ProjectName' is required")
 	}
 	if config.Serializer == nil {
 		return nil, fmt.Errorf("serializer cannot be nil")

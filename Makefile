@@ -25,11 +25,18 @@ generate-client: ## Generate API client from OpenAPI spec
 	python3 scripts/generate-client.py
 	make format
 
-run: ## Run the example application with environment variables
+run: ## Run the example application with environment variables (usage: make run <example_name>)
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
+		echo "Error: Please specify an example to run"; \
+		echo "Usage: make run <example_name>"; \
+		echo "Available examples:"; \
+		echo "  simple-chat"; \
+		exit 1; \
+	fi
 	@if [ -f .env ]; then \
-		set -a && . ./.env && set +a && go run ./examples; \
+		set -a && . ./.env && set +a && cd examples/$(filter-out $@,$(MAKECMDGOALS)) && go run .; \
 	else \
-		go run ./examples; \
+		cd examples/$(filter-out $@,$(MAKECMDGOALS)) && go run .; \
 	fi
 
 test: ## Run tests
@@ -37,3 +44,7 @@ test: ## Run tests
 
 install: ## Install the library (for local development)
 	go install ./...
+
+# Handle arguments passed to make run
+%:
+	@:

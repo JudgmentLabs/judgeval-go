@@ -20,6 +20,7 @@ type BasePromptScorer struct {
 }
 
 type ScorerOptions struct {
+	APIURL         string
 	APIKey         string
 	OrganizationID string
 }
@@ -92,8 +93,8 @@ func ScorerExists(name, judgmentAPIKey, organizationID string) (bool, error) {
 	return response.Exists, nil
 }
 
-func FetchPromptScorer(name, judgmentAPIKey, organizationID string) (*models.PromptScorer, error) {
-	client := api.NewClient(env.JudgmentAPIURL, judgmentAPIKey, organizationID)
+func FetchPromptScorer(name, judgmentAPIURL, judgmentAPIKey, organizationID string) (*models.PromptScorer, error) {
+	client := api.NewClient(judgmentAPIURL, judgmentAPIKey, organizationID)
 	request := &models.FetchPromptScorersRequest{
 		Names: []string{name},
 	}

@@ -11,8 +11,9 @@ type TracePromptScorer struct {
 	*BasePromptScorer
 }
 
-func GetTrace(name string, opts ...ScorerOption) (*TracePromptScorer, error) {
+func GetTracePromptScorer(name string, opts ...ScorerOption) (*TracePromptScorer, error) {
 	options := &ScorerOptions{
+		APIURL:         env.JudgmentAPIURL,
 		APIKey:         env.JudgmentAPIKey,
 		OrganizationID: env.JudgmentOrgID,
 	}
@@ -21,7 +22,7 @@ func GetTrace(name string, opts ...ScorerOption) (*TracePromptScorer, error) {
 		opt(options)
 	}
 
-	scorerConfig, err := FetchPromptScorer(name, options.APIKey, options.OrganizationID)
+	scorerConfig, err := FetchPromptScorer(name, options.APIURL, options.APIKey, options.OrganizationID)
 	if err != nil {
 		return nil, err
 	}

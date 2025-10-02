@@ -60,14 +60,12 @@ func WithEnableEvaluation(enableEvaluation bool) TracerConfigurationOptions {
 	}
 }
 
-type ISerializer interface {
-	Serialize(obj interface{}) string
-}
+type SerializerFunc func(obj interface{}) string
 
 type baseTracer struct {
 	configuration TracerConfiguration
 	apiClient     *api.Client
-	serializer    ISerializer
+	serializer    SerializerFunc
 	projectID     string
 	tracer        trace.Tracer
 }
@@ -87,8 +85,48 @@ func (bt *baseTracer) SetSpanKind(span trace.Span, kind string) {
 }
 
 func (bt *baseTracer) SetAttribute(span trace.Span, key string, value interface{}) {
-	if span.IsRecording() {
-		span.SetAttributes(attribute.String(key, bt.serializer.Serialize(value)))
+	if !span.IsRecording() {
+		return
+	}
+
+	attr := bt.createAttribute(key, value)
+	span.SetAttributes(attr)
+}
+
+func (bt *baseTracer) createAttribute(key string, value interface{}) attribute.KeyValue {
+	switch v := value.(type) {
+	case string:
+		return attribute.String(key, v)
+	case int:
+		return attribute.Int(key, v)
+	case int8:
+		return attribute.Int64(key, int64(v))
+	case int16:
+		return attribute.Int64(key, int64(v))
+	case int32:
+		return attribute.Int64(key, int64(v))
+	case int64:
+		return attribute.Int64(key, v)
+	case uint:
+		return attribute.Int64(key, int64(v))
+	case uint8:
+		return attribute.Int64(key, int64(v))
+	case uint16:
+		return attribute.Int64(key, int64(v))
+	case uint32:
+		return attribute.Int64(key, int64(v))
+	case uint64:
+		return attribute.Int64(key, int64(v))
+	case float32:
+		return attribute.Float64(key, float64(v))
+	case float64:
+		return attribute.Float64(key, v)
+	case bool:
+		return attribute.Bool(key, v)
+	case []string:
+		return attribute.StringSlice(key, v)
+	default:
+		return attribute.String(key, bt.serializer(value))
 	}
 }
 
@@ -135,22 +173,20 @@ func (bt *baseTracer) AsyncTraceEvaluate(ctx context.Context, scorer scorers.Bas
 
 	evaluationRun := bt.createTraceEvaluationRun(scorer, model, traceID, spanID)
 
-	traceEvalJSON := bt.serializer.Serialize(evaluationRun)
+	traceEvalJSON := bt.serializer(evaluationRun)
 	span.SetAttributes(attribute.String(AttributeKeys.PendingTraceEval, traceEvalJSON))
 }
 
 func (bt *baseTracer) SetAttributes(span trace.Span, attributes map[string]interface{}) {
-	if attributes == nil {
+	if attributes == nil || !span.IsRecording() {
 		return
 	}
 
-	if span.IsRecording() {
-		attrs := make([]attribute.KeyValue, 0, len(attributes))
-		for key, value := range attributes {
-			attrs = append(attrs, attribute.String(key, bt.serializer.Serialize(value)))
-		}
-		span.SetAttributes(attrs...)
+	attrs := make([]attribute.KeyValue, 0, len(attributes))
+	for key, value := range attributes {
+		attrs = append(attrs, bt.createAttribute(key, value))
 	}
+	span.SetAttributes(attrs...)
 }
 
 func (bt *baseTracer) SetLLMSpan(span trace.Span) {
@@ -256,13 +292,7 @@ func (bt *baseTracer) enqueueEvaluation(evaluationRun *data.ExampleEvaluationRun
 	}
 }
 
-type JSONSerializer struct{}
-
-func NewJSONSerializer() *JSONSerializer {
-	return &JSONSerializer{}
-}
-
-func (js *JSONSerializer) Serialize(obj interface{}) string {
+func DefaultJSONSerializer(obj interface{}) string {
 	if obj == nil {
 		return "null"
 	}

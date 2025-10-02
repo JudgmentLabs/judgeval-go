@@ -11,8 +11,9 @@ type PromptScorer struct {
 	*BasePromptScorer
 }
 
-func Get(name string, opts ...ScorerOption) (*PromptScorer, error) {
+func GetPromptScorer(name string, opts ...ScorerOption) (*PromptScorer, error) {
 	options := &ScorerOptions{
+		APIURL:         env.JudgmentAPIURL,
 		APIKey:         env.JudgmentAPIKey,
 		OrganizationID: env.JudgmentOrgID,
 	}
@@ -21,7 +22,7 @@ func Get(name string, opts ...ScorerOption) (*PromptScorer, error) {
 		opt(options)
 	}
 
-	scorerConfig, err := FetchPromptScorer(name, options.APIKey, options.OrganizationID)
+	scorerConfig, err := FetchPromptScorer(name, options.APIURL, options.APIKey, options.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
