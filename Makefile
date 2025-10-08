@@ -31,6 +31,7 @@ run: ## Run the example application with environment variables (usage: make run 
 		echo "Usage: make run <example_name>"; \
 		echo "Available examples:"; \
 		echo "  simple-chat"; \
+		echo "  manual-otel"; \
 		exit 1; \
 	fi
 	@if [ -f .env ]; then \

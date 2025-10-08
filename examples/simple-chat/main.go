@@ -155,13 +155,9 @@ func main() {
 
 	if os.Getenv("JUDGMENT_API_URL") != "" && os.Getenv("JUDGMENT_API_KEY") != "" {
 		t, err := tracer.NewTracer(
-			tracer.WithConfiguration(tracer.TracerConfiguration{
-				APIURL:           os.Getenv("JUDGMENT_API_URL"),
-				APIKey:           os.Getenv("JUDGMENT_API_KEY"),
-				OrganizationID:   os.Getenv("JUDGMENT_ORG_ID"),
-				ProjectName:      "default_project",
-				EnableEvaluation: true,
-			}),
+			tracer.WithConfiguration(tracer.NewTracerConfiguration(
+				tracer.WithProjectName("default_project"),
+			)),
 		)
 		if err != nil {
 			fmt.Printf("Warning: Failed to initialize tracer: %v\n", err)

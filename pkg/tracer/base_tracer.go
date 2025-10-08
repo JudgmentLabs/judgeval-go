@@ -60,6 +60,20 @@ func WithEnableEvaluation(enableEvaluation bool) TracerConfigurationOptions {
 	}
 }
 
+func NewTracerConfiguration(options ...TracerConfigurationOptions) TracerConfiguration {
+	config := TracerConfiguration{
+		APIURL:         env.JudgmentAPIURL,
+		APIKey:         env.JudgmentAPIKey,
+		OrganizationID: env.JudgmentOrgID,
+	}
+
+	for _, option := range options {
+		option(&config)
+	}
+
+	return config
+}
+
 type SerializerFunc func(obj interface{}) string
 
 type baseTracer struct {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/JudgmentLabs/judgeval-go/pkg/env"
 	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api"
 	"github.com/JudgmentLabs/judgeval-go/pkg/internal/api/models"
 	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
@@ -52,19 +51,19 @@ func WithInitialize(initialize bool) TracerOptions {
 
 func NewTracer(options ...TracerOptions) (*Tracer, error) {
 	config := &TracerConfig{
-		Configuration: TracerConfiguration{
-			APIURL:         env.JudgmentAPIURL,
-			APIKey:         env.JudgmentAPIKey,
-			OrganizationID: env.JudgmentOrgID,
-		},
-		Serializer: DefaultJSONSerializer,
-		Initialize: true,
+		Configuration: NewTracerConfiguration(),
+		Serializer:    DefaultJSONSerializer,
+		Initialize:    true,
 	}
 
 	for _, option := range options {
 		option(config)
 	}
 
+	return newTracerWithConfig(config)
+}
+
+func newTracerWithConfig(config *TracerConfig) (*Tracer, error) {
 	if config.Configuration.APIURL == "" {
 		return nil, fmt.Errorf("configuration 'APIURL' is required")
 	}
