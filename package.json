@@ -1,0 +1,22 @@
+{
+  "name": "judgeval-go",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "format": "go fmt ./...",
+    "format:check": "bash -c 'test -z \"$(gofmt -l .)\"'",
+    "clean": "rm -rf ./bin",
+    "build": "go build -o ./bin/judgeval ./examples",
+    "deps": "go mod download",
+    "tidy": "go mod tidy",
+    "generate:client": "npm run generate:client:raw && npm run format",
+    "generate:client:raw": "bash scripts/generate-client.sh",
+    "test": "go test ./...",
+    "install": "go install ./...",
+    "example": "dotenv -e .env -- ./scripts/run-example.sh",
+    "ci": "npm run format:check && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^7.4.2"
+  }
+}

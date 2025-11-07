@@ -1,3 +1,7 @@
+// Package data provides legacy data structures.
+//
+// Deprecated: Use github.com/JudgmentLabs/judgeval-go/v1 instead.
+// This package will be removed in a future version.
 package data
 
 import (

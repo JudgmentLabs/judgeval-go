@@ -5,7 +5,8 @@ import (
 )
 
 type FetchPromptScorersRequest struct {
-	Names []string `json:"names,omitempty"`
+	Names   []string `json:"names,omitempty"`
+	IsTrace bool     `json:"is_trace,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }

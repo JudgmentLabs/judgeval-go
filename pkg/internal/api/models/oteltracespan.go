@@ -23,14 +23,6 @@ type OtelTraceSpan struct {
 	StatusMessage      string        `json:"status_message,omitempty"`
 	Events             []interface{} `json:"events,omitempty"`
 	Links              []interface{} `json:"links,omitempty"`
-	LegacySpanId       string        `json:"legacy_span_id,omitempty"`
-	Inputs             interface{}   `json:"inputs,omitempty"`
-	Output             interface{}   `json:"output,omitempty"`
-	Error              interface{}   `json:"error,omitempty"`
-	AgentId            string        `json:"agent_id,omitempty"`
-	CumulativeLlmCost  float64       `json:"cumulative_llm_cost,omitempty"`
-	StateAfter         interface{}   `json:"state_after,omitempty"`
-	StateBefore        interface{}   `json:"state_before,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }

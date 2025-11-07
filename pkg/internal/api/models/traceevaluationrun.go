@@ -14,6 +14,7 @@ type TraceEvaluationRun struct {
 	CreatedAt       string          `json:"created_at,omitempty"`
 	TraceAndSpanIds [][]interface{} `json:"trace_and_span_ids,omitempty"`
 	IsOffline       bool            `json:"is_offline,omitempty"`
+	IsBucketRun     bool            `json:"is_bucket_run,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }

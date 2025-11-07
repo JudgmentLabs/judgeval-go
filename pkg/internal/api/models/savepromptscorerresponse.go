@@ -5,8 +5,7 @@ import (
 )
 
 type SavePromptScorerResponse struct {
-	Message string `json:"message,omitempty"`
-	Name    string `json:"name,omitempty"`
+	ScorerResponse PromptScorer `json:"scorer_response,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
