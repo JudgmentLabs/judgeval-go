@@ -12,10 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/JudgmentLabs/judgeval-go/pkg/data"
-	"github.com/JudgmentLabs/judgeval-go/pkg/scorers"
-	"github.com/JudgmentLabs/judgeval-go/pkg/scorers/api_scorers"
-	"github.com/JudgmentLabs/judgeval-go/pkg/tracer"
+	v1 "github.com/JudgmentLabs/judgeval-go/v1"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -49,10 +46,11 @@ type ChatResponse struct {
 }
 
 type ChatClient struct {
-	apiKey  string
-	baseURL string
-	client  *http.Client
-	tracer  *tracer.Tracer
+	apiKey         string
+	baseURL        string
+	client         *http.Client
+	tracer         *v1.Tracer
+	judgmentClient *v1.Client
 }
 
 func NewChatClient(apiKey string) *ChatClient {
@@ -65,8 +63,9 @@ func NewChatClient(apiKey string) *ChatClient {
 	}
 }
 
-func (c *ChatClient) SetTracer(t *tracer.Tracer) {
+func (c *ChatClient) SetTracer(t *v1.Tracer, judgmentClient *v1.Client) {
 	c.tracer = t
+	c.judgmentClient = judgmentClient
 }
 
 func (c *ChatClient) SendMessage(ctx context.Context, messages []ChatMessage) (*ChatResponse, error) {
@@ -81,14 +80,14 @@ func (c *ChatClient) SendMessage(ctx context.Context, messages []ChatMessage) (*
 		if span := trace.SpanFromContext(ctx); span != nil {
 			c.tracer.SetInput(span, reqBody)
 
-			c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAIRequestModel, reqBody.Model)
-			c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAIRequestTemperature, reqBody.Temperature)
-			c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAIRequestMaxTokens, reqBody.MaxTokens)
+			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIRequestModel, reqBody.Model)
+			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIRequestTemperature, reqBody.Temperature)
+			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIRequestMaxTokens, reqBody.MaxTokens)
 
 			if len(messages) > 0 {
 				lastMessage := messages[len(messages)-1]
 				if lastMessage.Role == "user" {
-					c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAIPrompt, lastMessage.Content)
+					c.tracer.SetAttribute(span, v1.AttributeKeysGenAIPrompt, lastMessage.Content)
 				}
 			}
 		}
@@ -129,13 +128,13 @@ func (c *ChatClient) SendMessage(ctx context.Context, messages []ChatMessage) (*
 
 	if c.tracer != nil {
 		if span := trace.SpanFromContext(ctx); span != nil {
-			c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAIResponseModel, chatResp.Model)
-			c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAIUsageInputTokens, chatResp.Usage.PromptTokens)
-			c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAIUsageOutputTokens, chatResp.Usage.CompletionTokens)
+			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIResponseModel, chatResp.Model)
+			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIUsageInputTokens, chatResp.Usage.PromptTokens)
+			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIUsageOutputTokens, chatResp.Usage.CompletionTokens)
 
 			if len(chatResp.Choices) > 0 {
-				c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAICompletion, chatResp.Choices[0].Message.Content)
-				c.tracer.SetAttribute(span, tracer.AttributeKeys.GenAIResponseFinishReasons, chatResp.Choices[0].FinishReason)
+				c.tracer.SetAttribute(span, v1.AttributeKeysGenAICompletion, chatResp.Choices[0].Message.Content)
+				c.tracer.SetAttribute(span, v1.AttributeKeysGenAIResponseFinishReasons, chatResp.Choices[0].FinishReason)
 			}
 		}
 	}
@@ -154,20 +153,32 @@ func main() {
 	chatClient := NewChatClient(apiKey)
 
 	if os.Getenv("JUDGMENT_API_URL") != "" && os.Getenv("JUDGMENT_API_KEY") != "" {
-		t, err := tracer.NewTracer(
-			tracer.WithConfiguration(tracer.NewTracerConfiguration(
-				tracer.WithProjectName("default_project"),
-			)),
+		client, err := v1.NewClient(
+			v1.WithAPIKey(os.Getenv("JUDGMENT_API_KEY")),
+			v1.WithOrganizationID(os.Getenv("JUDGMENT_ORG_ID")),
 		)
 		if err != nil {
-			fmt.Printf("Warning: Failed to initialize tracer: %v\n", err)
+			fmt.Printf("Warning: Failed to create Judgment client: %v\n", err)
 		} else {
-			chatClient.SetTracer(t)
-			defer t.Shutdown(context.Background())
+			ctx := context.Background()
+			tracer, err := client.Tracer.Create(ctx, v1.TracerCreateParams{
+				ProjectName: "default_project",
+				Initialize:  v1.Bool(true),
+			})
+			if err != nil {
+				fmt.Printf("Warning: Failed to initialize tracer: %v\n", err)
+			} else {
+				chatClient.SetTracer(tracer, client)
+				defer func() {
+					shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+					defer cancel()
+					tracer.Shutdown(shutdownCtx)
+				}()
+			}
 		}
 	}
 
-	fmt.Println("🤖 Simple Chat with OpenAI")
+	fmt.Println("Simple Chat with OpenAI")
 	fmt.Println("Type 'quit' or 'exit' to end the conversation")
 	fmt.Println("Type 'clear' to clear conversation history")
 	fmt.Println("----------------------------------------")
@@ -179,7 +190,7 @@ func main() {
 	ctx := context.Background()
 	var parentSpan trace.Span
 	if chatClient.tracer != nil {
-		parentSpan, ctx = chatClient.tracer.Span(ctx, "chat-session")
+		ctx, parentSpan = chatClient.tracer.Span(ctx, "chat-session")
 		chatClient.tracer.SetGeneralSpan(parentSpan)
 		chatClient.tracer.SetAttribute(parentSpan, "chat.session.start_time", time.Now().Unix())
 		defer parentSpan.End()
@@ -197,7 +208,7 @@ func main() {
 		}
 
 		if userInput == "quit" || userInput == "exit" {
-			fmt.Println("Goodbye! 👋")
+			fmt.Println("Goodbye!")
 			if chatClient.tracer != nil && parentSpan != nil {
 				chatClient.tracer.SetAttribute(parentSpan, "chat.session.end_time", time.Now().Unix())
 				chatClient.tracer.SetAttribute(parentSpan, "chat.session.message_count", messageCount)
@@ -220,7 +231,7 @@ func main() {
 		messageCtx := ctx
 		var span trace.Span
 		if chatClient.tracer != nil {
-			span, messageCtx = chatClient.tracer.Span(ctx, "OPENAI_API_CALL")
+			messageCtx, span = chatClient.tracer.Span(ctx, "OPENAI_API_CALL")
 			chatClient.tracer.SetLLMSpan(span)
 			chatClient.tracer.SetAttribute(span, "chat.message.number", messageCount)
 			defer span.End()
@@ -252,24 +263,21 @@ func main() {
 			}
 		}
 
-		// Async evaluation for answer relevancy
-		if chatClient.tracer != nil {
+		if chatClient.tracer != nil && chatClient.judgmentClient != nil {
 			go func() {
-				// Create answer relevancy scorer
-				scorer := api_scorers.NewAnswerRelevancyScorer(
-					scorers.WithThreshold(0.7),
-					scorers.WithModel("gpt-3.5-turbo"),
-				)
+				scorer := chatClient.judgmentClient.Scorers.BuiltIn.AnswerRelevancy(v1.AnswerRelevancyScorerParams{
+					Threshold: v1.Float(0.7),
+				})
 
-				// Create example for evaluation
-				example := data.NewExample(
-					data.WithName(fmt.Sprintf("chat-message-%d", messageCount)),
-					data.WithProperty("input", userInput),
-					data.WithProperty("actual_output", botMessage),
-				)
+				example := v1.NewExample(v1.ExampleParams{
+					Name: v1.String(fmt.Sprintf("chat-message-%d", messageCount)),
+					Properties: map[string]interface{}{
+						"input":         userInput,
+						"actual_output": botMessage,
+					},
+				})
 
-				// Trigger async evaluation
-				chatClient.tracer.AsyncEvaluate(messageCtx, scorer, example, "gpt-3.5-turbo")
+				chatClient.tracer.AsyncEvaluate(messageCtx, scorer, example, nil)
 			}()
 		}
 

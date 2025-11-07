@@ -5,14 +5,15 @@ import "github.com/JudgmentLabs/judgeval-go/v1/internal/api/models"
 type APIScorerType string
 
 const (
-	APIScorerTypeFaithfulness         APIScorerType = "faithfulness"
-	APIScorerTypeAnswerCorrectness    APIScorerType = "answer_correctness"
-	APIScorerTypeAnswerRelevancy      APIScorerType = "answer_relevancy"
-	APIScorerTypeInstructionAdherence APIScorerType = "instruction_adherence"
-	APIScorerTypeDerailment           APIScorerType = "derailment"
-	APIScorerTypePromptScorer         APIScorerType = "prompt_scorer"
-	APIScorerTypeTracePromptScorer    APIScorerType = "trace_prompt_scorer"
-	APIScorerTypeCustom               APIScorerType = "custom"
+	APIScorerTypePromptScorer         APIScorerType = "Prompt Scorer"
+	APIScorerTypeTracePromptScorer    APIScorerType = "Trace Prompt Scorer"
+	APIScorerTypeFaithfulness         APIScorerType = "Faithfulness"
+	APIScorerTypeAnswerRelevancy      APIScorerType = "Answer Relevancy"
+	APIScorerTypeAnswerCorrectness    APIScorerType = "Answer Correctness"
+	APIScorerTypeInstructionAdherence APIScorerType = "Instruction Adherence"
+	APIScorerTypeExecutionOrder       APIScorerType = "Execution Order"
+	APIScorerTypeDerailment           APIScorerType = "Derailment"
+	APIScorerTypeCustom               APIScorerType = "Custom"
 )
 
 func (t APIScorerType) String() string {

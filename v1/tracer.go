@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/JudgmentLabs/judgeval-go/pkg/env"
 	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
 	"github.com/JudgmentLabs/judgeval-go/pkg/version"
 	"github.com/JudgmentLabs/judgeval-go/v1/internal/api"
 	"github.com/JudgmentLabs/judgeval-go/v1/internal/api/models"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -295,6 +297,7 @@ func (b *BaseTracer) createEvaluationRun(scorer BaseScorer, example *Example, mo
 	modelName := getString(model, env.JudgmentDefaultGPTModel)
 
 	return &models.ExampleEvaluationRun{
+		Id:              uuid.New().String(),
 		ProjectName:     b.projectName,
 		EvalName:        runID,
 		Model:           modelName,
@@ -303,6 +306,7 @@ func (b *BaseTracer) createEvaluationRun(scorer BaseScorer, example *Example, mo
 		Examples:        []models.Example{example.toModel()},
 		JudgmentScorers: []models.ScorerConfig{*scorer.GetScorerConfig()},
 		CustomScorers:   []models.BaseScorer{},
+		CreatedAt:       time.Now().UTC().Format(time.RFC3339),
 	}
 }
 
@@ -311,6 +315,7 @@ func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, model *string, 
 	modelName := getString(model, env.JudgmentDefaultGPTModel)
 
 	return &models.TraceEvaluationRun{
+		Id:              uuid.New().String(),
 		ProjectName:     b.projectName,
 		EvalName:        evalName,
 		Model:           modelName,
@@ -318,6 +323,7 @@ func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, model *string, 
 		JudgmentScorers: []models.ScorerConfig{*scorer.GetScorerConfig()},
 		CustomScorers:   []models.BaseScorer{},
 		IsOffline:       false,
+		CreatedAt:       time.Now().UTC().Format(time.RFC3339),
 	}
 }
 

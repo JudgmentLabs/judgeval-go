@@ -1,6 +1,10 @@
 package v1
 
-import "github.com/JudgmentLabs/judgeval-go/v1/internal/api/models"
+import (
+	"maps"
+
+	"github.com/JudgmentLabs/judgeval-go/v1/internal/api/models"
+)
 
 type BaseScorer interface {
 	GetName() string
@@ -45,9 +49,7 @@ func (s *apiScorer) GetName() string {
 
 func (s *apiScorer) toScorerConfig(requiredParams []string) *models.ScorerConfig {
 	kwargs := make(map[string]interface{})
-	for k, v := range s.additionalProps {
-		kwargs[k] = v
-	}
+	maps.Copy(kwargs, s.additionalProps)
 
 	return &models.ScorerConfig{
 		ScoreType:      s.scoreType.String(),
