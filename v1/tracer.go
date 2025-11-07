@@ -45,7 +45,7 @@ func (f *TracerFactory) Create(ctx context.Context, params TracerCreateParams) (
 		serializer = defaultJSONSerializer
 	}
 
-	projectID, err := resolveProjectID(ctx, f.client, params.ProjectName)
+	projectID, err := resolveProjectID(f.client, params.ProjectName)
 	if err != nil {
 		logger.Error("Failed to resolve project %s: %v. Skipping Judgment export.", params.ProjectName, err)
 		projectID = ""
@@ -327,7 +327,7 @@ func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, model *string, 
 	}
 }
 
-func resolveProjectID(ctx context.Context, client *api.Client, projectName string) (string, error) {
+func resolveProjectID(client *api.Client, projectName string) (string, error) {
 	logger.Info("Resolving project ID for project: %s", projectName)
 
 	req := &models.ResolveProjectNameRequest{
