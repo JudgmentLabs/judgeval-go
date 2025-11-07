@@ -275,9 +275,9 @@ func main() {
 						"input":         userInput,
 						"actual_output": botMessage,
 					},
-				})
+			})
 
-				chatClient.tracer.AsyncEvaluate(messageCtx, scorer, example, nil)
+				chatClient.tracer.AsyncEvaluate(messageCtx, scorer, example, v1.String("gpt-5"))
 			}()
 		}
 

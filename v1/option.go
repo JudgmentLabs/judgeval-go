@@ -70,10 +70,3 @@ func getFloat(ptr *float64, defaultVal float64) float64 {
 	}
 	return *ptr
 }
-
-func getInt(ptr *int, defaultVal int) int {
-	if ptr == nil {
-		return defaultVal
-	}
-	return *ptr
-}
