@@ -323,6 +323,7 @@ func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, model *string, 
 		JudgmentScorers: []models.ScorerConfig{*scorer.GetScorerConfig()},
 		CustomScorers:   []models.BaseScorer{},
 		IsOffline:       false,
+		IsBucketRun:     false,
 		CreatedAt:       time.Now().UTC().Format(time.RFC3339),
 	}
 }
