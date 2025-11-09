@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"maps"
 	"time"
 
 	"github.com/JudgmentLabs/judgeval-go/v1/internal/api/models"
@@ -25,9 +26,7 @@ func NewExample(params ExampleParams) *Example {
 
 	properties := make(map[string]interface{})
 	if params.Properties != nil {
-		for k, v := range params.Properties {
-			properties[k] = v
-		}
+		maps.Copy(properties, params.Properties)
 	}
 
 	return &Example{
@@ -49,9 +48,7 @@ func (e *Example) GetProperty(key string) interface{} {
 
 func (e *Example) GetProperties() map[string]interface{} {
 	propsCopy := make(map[string]interface{})
-	for k, v := range e.properties {
-		propsCopy[k] = v
-	}
+	maps.Copy(propsCopy, e.properties)
 	return propsCopy
 }
 
