@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
@@ -356,20 +355,11 @@ func defaultJSONSerializer(v interface{}) (string, error) {
 	return string(bytes), nil
 }
 
-type spanWrapper struct {
-	span trace.Span
-	ctx  context.Context
-}
-
 func (b *BaseTracer) StartSpan(ctx context.Context, spanName string) (context.Context, trace.Span) {
 	ctx, span := b.tracer.Start(ctx, spanName)
 	return ctx, span
 }
 
-func (b *BaseTracer) EndSpan(span trace.Span, err error) {
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-	}
+func (b *BaseTracer) EndSpan(span trace.Span) {
 	span.End()
 }

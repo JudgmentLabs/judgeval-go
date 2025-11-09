@@ -6,7 +6,6 @@
     "format": "go fmt ./...",
     "format:check": "bash -c 'test -z \"$(gofmt -l .)\"'",
     "clean": "rm -rf ./bin",
-    "build": "go build -o ./bin/judgeval ./examples",
     "deps": "go mod download",
     "tidy": "go mod tidy",
     "generate:client": "npm run generate:client:raw && npm run format",

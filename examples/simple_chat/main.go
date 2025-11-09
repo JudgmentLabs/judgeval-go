@@ -2,144 +2,96 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	v1 "github.com/JudgmentLabs/judgeval-go/v1"
+	otelopenai "github.com/langwatch/langwatch/sdk-go/instrumentation/openai"
+	"github.com/openai/openai-go"
+	oaioption "github.com/openai/openai-go/option"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type ChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type ChatRequest struct {
-	Model       string        `json:"model"`
-	Messages    []ChatMessage `json:"messages"`
-	MaxTokens   int           `json:"max_tokens,omitempty"`
-	Temperature float64       `json:"temperature,omitempty"`
-}
-
-type ChatResponse struct {
-	Choices []struct {
-		Message      ChatMessage `json:"message"`
-		FinishReason string      `json:"finish_reason"`
-	} `json:"choices"`
-	Usage struct {
-		PromptTokens     int `json:"prompt_tokens"`
-		CompletionTokens int `json:"completion_tokens"`
-		TotalTokens      int `json:"total_tokens"`
-	} `json:"usage"`
-	Model string `json:"model"`
-	Error struct {
-		Message string `json:"message"`
-		Type    string `json:"type"`
-	} `json:"error"`
-}
-
 type ChatClient struct {
-	apiKey         string
-	baseURL        string
-	client         *http.Client
+	client         openai.Client
+	judgmentClient *v1.JudgmentClient
 	tracer         *v1.Tracer
-	judgmentClient *v1.Client
 }
 
-func NewChatClient(apiKey string) *ChatClient {
+func NewChatClient(apiKey string) (*ChatClient, error) {
+	client := openai.NewClient(
+		oaioption.WithAPIKey(apiKey),
+		oaioption.WithMiddleware(otelopenai.Middleware("default_project",
+			otelopenai.WithCaptureInput(),
+			otelopenai.WithCaptureOutput(),
+		)),
+	)
+
 	return &ChatClient{
-		apiKey:  apiKey,
-		baseURL: "https://api.openai.com/v1/chat/completions",
-		client: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-	}
+		client: client,
+	}, nil
 }
 
-func (c *ChatClient) SetTracer(t *v1.Tracer, judgmentClient *v1.Client) {
-	c.tracer = t
+func (c *ChatClient) SetJudgmentClient(judgmentClient *v1.JudgmentClient, tracer *v1.Tracer) {
 	c.judgmentClient = judgmentClient
+	c.tracer = tracer
 }
 
-func (c *ChatClient) SendMessage(ctx context.Context, messages []ChatMessage) (*ChatResponse, error) {
-	reqBody := ChatRequest{
-		Model:       "gpt-3.5-turbo",
+func (c *ChatClient) SendMessage(ctx context.Context, messages []openai.ChatCompletionMessageParamUnion) (string, error) {
+	response, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+		Model:       openai.ChatModelGPT4,
 		Messages:    messages,
-		MaxTokens:   1000,
-		Temperature: 0.7,
-	}
-
-	if c.tracer != nil {
-		if span := trace.SpanFromContext(ctx); span != nil {
-			c.tracer.SetInput(span, reqBody)
-
-			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIRequestModel, reqBody.Model)
-			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIRequestTemperature, reqBody.Temperature)
-			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIRequestMaxTokens, reqBody.MaxTokens)
-
-			if len(messages) > 0 {
-				lastMessage := messages[len(messages)-1]
-				if lastMessage.Role == "user" {
-					c.tracer.SetAttribute(span, v1.AttributeKeysGenAIPrompt, lastMessage.Content)
-				}
-			}
-		}
-	}
-
-	jsonData, err := json.Marshal(reqBody)
+		MaxTokens:   openai.Int(1000),
+		Temperature: openai.Float(0.7),
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
+		return "", fmt.Errorf("chat completion failed: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL, bytes.NewBuffer(jsonData))
+	if len(response.Choices) == 0 {
+		return "", fmt.Errorf("no response received from OpenAI")
+	}
+
+	return response.Choices[0].Message.Content, nil
+}
+
+func handleMessage(ctx context.Context, chatClient *ChatClient, userInput string, messages []openai.ChatCompletionMessageParamUnion, messageCount int) ([]openai.ChatCompletionMessageParamUnion, string, error) {
+	var spanCtx context.Context
+	var span trace.Span
+	if chatClient.tracer != nil {
+		spanCtx, span = chatClient.tracer.Span(ctx, "chat-message")
+		defer span.End()
+	} else {
+		spanCtx = ctx
+	}
+
+	messages = append(messages, openai.UserMessage(userInput))
+
+	fmt.Print("Bot: ")
+	botMessage, err := chatClient.SendMessage(spanCtx, messages)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return messages[:len(messages)-1], "", err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	fmt.Println(botMessage)
+	messages = append(messages, openai.AssistantMessage(botMessage))
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	if chatClient.tracer != nil && chatClient.judgmentClient != nil {
+		chatClient.tracer.AsyncEvaluate(spanCtx, chatClient.judgmentClient.Scorers.BuiltIn.AnswerRelevancy(v1.AnswerRelevancyScorerParams{
+			Threshold: v1.Float(0.7),
+		}), v1.NewExample(v1.ExampleParams{
+			Name: v1.String(fmt.Sprintf("chat-message-%d", messageCount)),
+			Properties: map[string]any{
+				"input":         userInput,
+				"actual_output": botMessage,
+			},
+		}), v1.String("gpt-4"))
 	}
 
-	var chatResp ChatResponse
-	if err := json.Unmarshal(body, &chatResp); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	if c.tracer != nil {
-		if span := trace.SpanFromContext(ctx); span != nil {
-			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIResponseModel, chatResp.Model)
-			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIUsageInputTokens, chatResp.Usage.PromptTokens)
-			c.tracer.SetAttribute(span, v1.AttributeKeysGenAIUsageOutputTokens, chatResp.Usage.CompletionTokens)
-
-			if len(chatResp.Choices) > 0 {
-				c.tracer.SetAttribute(span, v1.AttributeKeysGenAICompletion, chatResp.Choices[0].Message.Content)
-				c.tracer.SetAttribute(span, v1.AttributeKeysGenAIResponseFinishReasons, chatResp.Choices[0].FinishReason)
-			}
-		}
-	}
-
-	return &chatResp, nil
+	return messages, botMessage, nil
 }
 
 func main() {
@@ -150,25 +102,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	chatClient := NewChatClient(apiKey)
+	chatClient, err := NewChatClient(apiKey)
+	if err != nil {
+		fmt.Printf("Error: Failed to create chat client: %v\n", err)
+		os.Exit(1)
+	}
 
+	var tracer *v1.Tracer
+	var judgmentClient *v1.JudgmentClient
 	if os.Getenv("JUDGMENT_API_URL") != "" && os.Getenv("JUDGMENT_API_KEY") != "" {
-		client, err := v1.NewClient(
+		client, err := v1.NewJudgmentClient(
 			v1.WithAPIKey(os.Getenv("JUDGMENT_API_KEY")),
 			v1.WithOrganizationID(os.Getenv("JUDGMENT_ORG_ID")),
 		)
 		if err != nil {
 			fmt.Printf("Warning: Failed to create Judgment client: %v\n", err)
 		} else {
+			judgmentClient = client
 			ctx := context.Background()
-			tracer, err := client.Tracer.Create(ctx, v1.TracerCreateParams{
+			tracer, err = client.Tracer.Create(ctx, v1.TracerCreateParams{
 				ProjectName: "default_project",
 				Initialize:  v1.Bool(true),
 			})
 			if err != nil {
 				fmt.Printf("Warning: Failed to initialize tracer: %v\n", err)
 			} else {
-				chatClient.SetTracer(tracer, client)
+				chatClient.SetJudgmentClient(judgmentClient, tracer)
 				defer func() {
 					shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 					defer cancel()
@@ -178,23 +137,17 @@ func main() {
 		}
 	}
 
+	ctx, span := tracer.StartSpan(context.Background(), "main")
+	defer tracer.EndSpan(span)
+
 	fmt.Println("Simple Chat with OpenAI")
 	fmt.Println("Type 'quit' or 'exit' to end the conversation")
 	fmt.Println("Type 'clear' to clear conversation history")
 	fmt.Println("----------------------------------------")
 
-	var messages []ChatMessage
+	var messages []openai.ChatCompletionMessageParamUnion
 	scanner := bufio.NewScanner(os.Stdin)
 	messageCount := 0
-
-	ctx := context.Background()
-	var parentSpan trace.Span
-	if chatClient.tracer != nil {
-		ctx, parentSpan = chatClient.tracer.Span(ctx, "chat-session")
-		chatClient.tracer.SetGeneralSpan(parentSpan)
-		chatClient.tracer.SetAttribute(parentSpan, "chat.session.start_time", time.Now().Unix())
-		defer parentSpan.End()
-	}
 
 	for {
 		fmt.Print("You: ")
@@ -209,10 +162,6 @@ func main() {
 
 		if userInput == "quit" || userInput == "exit" {
 			fmt.Println("Goodbye!")
-			if chatClient.tracer != nil && parentSpan != nil {
-				chatClient.tracer.SetAttribute(parentSpan, "chat.session.end_time", time.Now().Unix())
-				chatClient.tracer.SetAttribute(parentSpan, "chat.session.message_count", messageCount)
-			}
 			break
 		}
 
@@ -222,63 +171,13 @@ func main() {
 			continue
 		}
 
-		messages = append(messages, ChatMessage{
-			Role:    "user",
-			Content: userInput,
-		})
-
 		messageCount++
-		messageCtx := ctx
-		var span trace.Span
-		if chatClient.tracer != nil {
-			messageCtx, span = chatClient.tracer.Span(ctx, "OPENAI_API_CALL")
-			chatClient.tracer.SetLLMSpan(span)
-			chatClient.tracer.SetAttribute(span, "chat.message.number", messageCount)
-			defer span.End()
-		}
-
-		fmt.Print("Bot: ")
-		resp, err := chatClient.SendMessage(messageCtx, messages)
+		var err error
+		messages, _, err = handleMessage(ctx, chatClient, userInput, messages, messageCount)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
+			messageCount--
 			continue
-		}
-
-		if len(resp.Choices) == 0 {
-			fmt.Println("No response received from OpenAI")
-			continue
-		}
-
-		botMessage := resp.Choices[0].Message.Content
-		fmt.Println(botMessage)
-
-		messages = append(messages, ChatMessage{
-			Role:    "assistant",
-			Content: botMessage,
-		})
-
-		if chatClient.tracer != nil {
-			if span := trace.SpanFromContext(messageCtx); span != nil {
-				chatClient.tracer.SetOutput(span, botMessage)
-			}
-		}
-
-		if chatClient.tracer != nil && chatClient.judgmentClient != nil {
-			go func() {
-				scorer := chatClient.judgmentClient.Scorers.BuiltIn.AnswerRelevancy(v1.AnswerRelevancyScorerParams{
-					Threshold: v1.Float(0.7),
-				})
-
-				example := v1.NewExample(v1.ExampleParams{
-					Name: v1.String(fmt.Sprintf("chat-message-%d", messageCount)),
-					Properties: map[string]interface{}{
-						"input":         userInput,
-						"actual_output": botMessage,
-					},
-			})
-
-				chatClient.tracer.AsyncEvaluate(messageCtx, scorer, example, v1.String("gpt-5"))
-			}()
 		}
 
 		fmt.Println()
