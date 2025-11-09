@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/JudgmentLabs/judgeval-go/pkg/env"
 	"github.com/JudgmentLabs/judgeval-go/pkg/logger"
 	"github.com/JudgmentLabs/judgeval-go/pkg/version"
 	"github.com/JudgmentLabs/judgeval-go/v1/internal/api"
@@ -95,12 +94,37 @@ func (t *Tracer) Initialize(ctx context.Context) error {
 			attrs = append(attrs, attribute.String(k, val))
 		case int:
 			attrs = append(attrs, attribute.Int(k, val))
+		case int8:
+			attrs = append(attrs, attribute.Int64(k, int64(val)))
+		case int16:
+			attrs = append(attrs, attribute.Int64(k, int64(val)))
+		case int32:
+			attrs = append(attrs, attribute.Int64(k, int64(val)))
 		case int64:
 			attrs = append(attrs, attribute.Int64(k, val))
+		case uint:
+			attrs = append(attrs, attribute.Int64(k, int64(val)))
+		case uint8:
+			attrs = append(attrs, attribute.Int64(k, int64(val)))
+		case uint16:
+			attrs = append(attrs, attribute.Int64(k, int64(val)))
+		case uint32:
+			attrs = append(attrs, attribute.Int64(k, int64(val)))
+		case uint64:
+			attrs = append(attrs, attribute.Int64(k, int64(val)))
+		case float32:
+			attrs = append(attrs, attribute.Float64(k, float64(val)))
 		case float64:
 			attrs = append(attrs, attribute.Float64(k, val))
 		case bool:
 			attrs = append(attrs, attribute.Bool(k, val))
+		case []string:
+			attrs = append(attrs, attribute.StringSlice(k, val))
+		default:
+			serialized, err := t.serializer(val)
+			if err == nil {
+				attrs = append(attrs, attribute.String(k, serialized))
+			}
 		}
 	}
 
@@ -193,12 +217,32 @@ func (b *BaseTracer) SetAttribute(span trace.Span, key string, value interface{}
 		span.SetAttributes(attribute.String(key, v))
 	case int:
 		span.SetAttributes(attribute.Int(key, v))
+	case int8:
+		span.SetAttributes(attribute.Int64(key, int64(v)))
+	case int16:
+		span.SetAttributes(attribute.Int64(key, int64(v)))
+	case int32:
+		span.SetAttributes(attribute.Int64(key, int64(v)))
 	case int64:
 		span.SetAttributes(attribute.Int64(key, v))
+	case uint:
+		span.SetAttributes(attribute.Int64(key, int64(v)))
+	case uint8:
+		span.SetAttributes(attribute.Int64(key, int64(v)))
+	case uint16:
+		span.SetAttributes(attribute.Int64(key, int64(v)))
+	case uint32:
+		span.SetAttributes(attribute.Int64(key, int64(v)))
+	case uint64:
+		span.SetAttributes(attribute.Int64(key, int64(v)))
+	case float32:
+		span.SetAttributes(attribute.Float64(key, float64(v)))
 	case float64:
 		span.SetAttributes(attribute.Float64(key, v))
 	case bool:
 		span.SetAttributes(attribute.Bool(key, v))
+	case []string:
+		span.SetAttributes(attribute.StringSlice(key, v))
 	default:
 		serialized, err := b.serializer(v)
 		if err == nil {
@@ -221,7 +265,7 @@ func (b *BaseTracer) SetOutput(span trace.Span, output interface{}) {
 	b.SetAttribute(span, AttributeKeysJudgmentOutput, output)
 }
 
-func (b *BaseTracer) AsyncEvaluate(ctx context.Context, scorer BaseScorer, example *Example, model *string) {
+func (b *BaseTracer) AsyncEvaluate(ctx context.Context, scorer BaseScorer, example *Example) {
 	if !b.enableEvaluation {
 		return
 	}
@@ -238,7 +282,7 @@ func (b *BaseTracer) AsyncEvaluate(ctx context.Context, scorer BaseScorer, examp
 	logger.Info("asyncEvaluate: project=%s, traceId=%s, spanId=%s, scorer=%s",
 		b.projectName, traceID, spanID, scorer.GetName())
 
-	evaluationRun := b.createEvaluationRun(scorer, example, model, traceID, spanID)
+	evaluationRun := b.createEvaluationRun(scorer, example, traceID, spanID)
 
 	go func() {
 		if _, err := b.apiClient.AddToRunEvalQueue(evaluationRun); err != nil {
@@ -247,7 +291,7 @@ func (b *BaseTracer) AsyncEvaluate(ctx context.Context, scorer BaseScorer, examp
 	}()
 }
 
-func (b *BaseTracer) AsyncTraceEvaluate(ctx context.Context, scorer BaseScorer, model *string) {
+func (b *BaseTracer) AsyncTraceEvaluate(ctx context.Context, scorer BaseScorer) {
 	if !b.enableEvaluation {
 		return
 	}
@@ -264,7 +308,7 @@ func (b *BaseTracer) AsyncTraceEvaluate(ctx context.Context, scorer BaseScorer, 
 	logger.Info("asyncTraceEvaluate: project=%s, traceId=%s, spanId=%s, scorer=%s",
 		b.projectName, traceID, spanID, scorer.GetName())
 
-	evaluationRun := b.createTraceEvaluationRun(scorer, model, traceID, spanID)
+	evaluationRun := b.createTraceEvaluationRun(scorer, traceID, spanID)
 
 	traceEvalJSON, err := json.Marshal(evaluationRun)
 	if err != nil {
@@ -291,15 +335,14 @@ func (b *BaseTracer) buildEndpoint() string {
 	return baseURL + "/otel/v1/traces"
 }
 
-func (b *BaseTracer) createEvaluationRun(scorer BaseScorer, example *Example, model *string, traceID, spanID string) *models.ExampleEvaluationRun {
+func (b *BaseTracer) createEvaluationRun(scorer BaseScorer, example *Example, traceID, spanID string) *models.ExampleEvaluationRun {
 	runID := "async_evaluate_" + spanID
-	modelName := getString(model, env.JudgmentDefaultGPTModel)
 
 	return &models.ExampleEvaluationRun{
-		Id:              uuid.New().String(),
-		ProjectName:     b.projectName,
-		EvalName:        runID,
-		Model:           modelName,
+		Id:          uuid.New().String(),
+		ProjectName: b.projectName,
+		EvalName:    runID,
+		// Model:           env.JudgmentDefaultGPTModel,
 		TraceId:         traceID,
 		TraceSpanId:     spanID,
 		Examples:        []models.Example{example.toModel()},
@@ -309,16 +352,15 @@ func (b *BaseTracer) createEvaluationRun(scorer BaseScorer, example *Example, mo
 	}
 }
 
-func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, model *string, traceID, spanID string) *models.TraceEvaluationRun {
+func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, traceID, spanID string) *models.TraceEvaluationRun {
 	evalName := "async_trace_evaluate_" + spanID
-	modelName := getString(model, env.JudgmentDefaultGPTModel)
 
 	return &models.TraceEvaluationRun{
-		Id:              uuid.New().String(),
-		ProjectName:     b.projectName,
-		EvalName:        evalName,
-		Model:           modelName,
-		TraceAndSpanIds: [][]interface{}{{traceID, spanID}},
+		Id:          uuid.New().String(),
+		ProjectName: b.projectName,
+		EvalName:    evalName,
+		// Model:           env.JudgmentDefaultGPTModel,
+		TraceAndSpanIds: [][]any{{traceID, spanID}},
 		JudgmentScorers: []models.ScorerConfig{*scorer.GetScorerConfig()},
 		CustomScorers:   []models.BaseScorer{},
 		IsOffline:       false,

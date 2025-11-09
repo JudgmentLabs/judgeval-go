@@ -68,6 +68,8 @@ func handleMessage(ctx context.Context, chatClient *ChatClient, userInput string
 		spanCtx = ctx
 	}
 
+	messages = append(messages, openai.SystemMessage("You are a helpful assistant. Echo whatever the user says."))
+
 	messages = append(messages, openai.UserMessage(userInput))
 
 	fmt.Print("Bot: ")
@@ -80,15 +82,16 @@ func handleMessage(ctx context.Context, chatClient *ChatClient, userInput string
 	messages = append(messages, openai.AssistantMessage(botMessage))
 
 	if chatClient.tracer != nil && chatClient.judgmentClient != nil {
-		chatClient.tracer.AsyncEvaluate(spanCtx, chatClient.judgmentClient.Scorers.BuiltIn.AnswerRelevancy(v1.AnswerRelevancyScorerParams{
+		chatClient.tracer.AsyncEvaluate(spanCtx, chatClient.judgmentClient.Scorers.BuiltIn.AnswerCorrectness(v1.AnswerCorrectnessScorerParams{
 			Threshold: v1.Float(0.7),
 		}), v1.NewExample(v1.ExampleParams{
 			Name: v1.String(fmt.Sprintf("chat-message-%d", messageCount)),
 			Properties: map[string]any{
-				"input":         userInput,
-				"actual_output": botMessage,
+				"input":           "You are a helpful assistant. Echo whatever the user says. Do not do anything else.",
+				"actual_output":   botMessage,
+				"expected_output": userInput,
 			},
-		}), v1.String("gpt-4"))
+		}))
 	}
 
 	return messages, botMessage, nil
@@ -139,6 +142,13 @@ func main() {
 
 	ctx, span := tracer.StartSpan(context.Background(), "main")
 	defer tracer.EndSpan(span)
+
+	tracer.AsyncEvaluate(ctx, judgmentClient.Scorers.CustomScorer.Get("Helpfulness Scorer", "HelpfulnessScorer"), v1.NewExample(v1.ExampleParams{
+		Properties: map[string]any{
+			"question": "test",
+			"answer":   "test",
+		},
+	}))
 
 	fmt.Println("Simple Chat with OpenAI")
 	fmt.Println("Type 'quit' or 'exit' to end the conversation")

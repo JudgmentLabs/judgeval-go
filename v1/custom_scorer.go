@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"fmt"
-
 	"github.com/JudgmentLabs/judgeval-go/v1/internal/api/models"
 )
 
@@ -19,25 +17,12 @@ type CustomScorer struct {
 	serverHosted bool
 }
 
-func (f *CustomScorerFactory) Get(name string, className *string) *CustomScorer {
-	finalClassName := name
-	if className != nil {
-		finalClassName = *className
-	}
-
+func (f *CustomScorerFactory) Get(name string, className string) *CustomScorer {
 	return &CustomScorer{
 		name:         name,
-		className:    finalClassName,
+		className:    className,
 		serverHosted: true,
 	}
-}
-
-func (f *CustomScorerFactory) Create(params CustomScorerParams) (*CustomScorer, error) {
-	if params.Name == "" {
-		return nil, fmt.Errorf("name is required")
-	}
-
-	return f.Get(params.Name, params.ClassName), nil
 }
 
 func (s *CustomScorer) GetName() string {
