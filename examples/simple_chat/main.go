@@ -17,7 +17,7 @@ import (
 
 type ChatClient struct {
 	client         openai.Client
-	judgmentClient *v1.JudgmentClient
+	judgmentClient *v1.Judgeval
 	tracer         *v1.Tracer
 }
 
@@ -35,7 +35,7 @@ func NewChatClient(apiKey string) (*ChatClient, error) {
 	}, nil
 }
 
-func (c *ChatClient) SetJudgmentClient(judgmentClient *v1.JudgmentClient, tracer *v1.Tracer) {
+func (c *ChatClient) SetJudgeval(judgmentClient *v1.Judgeval, tracer *v1.Tracer) {
 	c.judgmentClient = judgmentClient
 	c.tracer = tracer
 }
@@ -112,9 +112,9 @@ func main() {
 	}
 
 	var tracer *v1.Tracer
-	var judgmentClient *v1.JudgmentClient
+	var judgmentClient *v1.Judgeval
 	if os.Getenv("JUDGMENT_API_URL") != "" && os.Getenv("JUDGMENT_API_KEY") != "" {
-		client, err := v1.NewJudgmentClient(
+		client, err := v1.NewJudgeval(
 			v1.WithAPIKey(os.Getenv("JUDGMENT_API_KEY")),
 			v1.WithOrganizationID(os.Getenv("JUDGMENT_ORG_ID")),
 		)
@@ -130,7 +130,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Warning: Failed to initialize tracer: %v\n", err)
 			} else {
-				chatClient.SetJudgmentClient(judgmentClient, tracer)
+				chatClient.SetJudgeval(judgmentClient, tracer)
 				defer func() {
 					shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 					defer cancel()

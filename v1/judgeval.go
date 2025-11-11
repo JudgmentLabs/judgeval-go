@@ -7,14 +7,14 @@ import (
 	"github.com/JudgmentLabs/judgeval-go/v1/internal/api"
 )
 
-type JudgmentClient struct {
+type Judgeval struct {
 	apiClient  *api.Client
 	Tracer     *TracerFactory
 	Scorers    *ScorersFactory
 	Evaluation *EvaluationFactory
 }
 
-func NewJudgmentClient(opts ...Option) (*JudgmentClient, error) {
+func NewJudgeval(opts ...Option) (*Judgeval, error) {
 	cfg := &clientConfig{
 		apiKey: env.JudgmentAPIKey,
 		orgID:  env.JudgmentOrgID,
@@ -37,7 +37,7 @@ func NewJudgmentClient(opts ...Option) (*JudgmentClient, error) {
 
 	apiClient := api.NewClient(cfg.apiURL, cfg.apiKey, cfg.orgID)
 
-	return &JudgmentClient{
+	return &Judgeval{
 		apiClient:  apiClient,
 		Tracer:     &TracerFactory{client: apiClient},
 		Scorers:    newScorersFactory(apiClient),
