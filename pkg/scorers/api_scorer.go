@@ -1,3 +1,7 @@
+// Package scorers provides legacy scorer functionality.
+//
+// Deprecated: Use github.com/JudgmentLabs/judgeval-go/v1 instead.
+// This package will be removed in a future version.
 package scorers
 
 import (

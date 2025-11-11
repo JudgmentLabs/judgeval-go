@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 )
 
-type FetchPromptScorersRequest struct {
-	Names   []string `json:"names,omitempty"`
-	IsTrace bool     `json:"is_trace,omitempty"`
+type EvalResultsFetch struct {
+	ExperimentRunId string `json:"experiment_run_id,omitempty"`
+	ProjectName     string `json:"project_name,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *FetchPromptScorersRequest) UnmarshalJSON(data []byte) error {
-	type Alias FetchPromptScorersRequest
+func (m *EvalResultsFetch) UnmarshalJSON(data []byte) error {
+	type Alias EvalResultsFetch
 	aux := &struct {
 		*Alias
 	}{
@@ -32,8 +32,8 @@ func (m *FetchPromptScorersRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m FetchPromptScorersRequest) MarshalJSON() ([]byte, error) {
-	type Alias FetchPromptScorersRequest
+func (m EvalResultsFetch) MarshalJSON() ([]byte, error) {
+	type Alias EvalResultsFetch
 	aux := &struct {
 		*Alias
 	}{

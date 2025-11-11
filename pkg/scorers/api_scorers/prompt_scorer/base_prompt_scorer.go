@@ -141,7 +141,7 @@ func PushPromptScorer(
 	}
 
 	if response != nil {
-		return response.Name, nil
+		return response.ScorerResponse.Name, nil
 	}
 	return "", nil
 }
