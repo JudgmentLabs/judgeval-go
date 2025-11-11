@@ -10,9 +10,6 @@ const (
 	APIScorerTypeFaithfulness         APIScorerType = "Faithfulness"
 	APIScorerTypeAnswerRelevancy      APIScorerType = "Answer Relevancy"
 	APIScorerTypeAnswerCorrectness    APIScorerType = "Answer Correctness"
-	APIScorerTypeInstructionAdherence APIScorerType = "Instruction Adherence"
-	APIScorerTypeExecutionOrder       APIScorerType = "Execution Order"
-	APIScorerTypeDerailment           APIScorerType = "Derailment"
 	APIScorerTypeCustom               APIScorerType = "Custom"
 )
 
