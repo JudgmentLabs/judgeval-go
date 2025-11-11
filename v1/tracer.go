@@ -61,7 +61,7 @@ func (f *TracerFactory) Create(ctx context.Context, params TracerCreateParams) (
 		resourceAttributes: params.ResourceAttributes,
 	}
 
-	if getBool(params.Initialize, false) {
+	if getBool(params.Initialize, true) {
 		if err := tracer.Initialize(ctx); err != nil {
 			return nil, err
 		}
@@ -339,9 +339,9 @@ func (b *BaseTracer) createEvaluationRun(scorer BaseScorer, example *Example, tr
 	runID := "async_evaluate_" + spanID
 
 	return &models.ExampleEvaluationRun{
-		Id:          uuid.New().String(),
-		ProjectName: b.projectName,
-		EvalName:    runID,
+		Id:              uuid.New().String(),
+		ProjectName:     b.projectName,
+		EvalName:        runID,
 		TraceId:         traceID,
 		TraceSpanId:     spanID,
 		Examples:        []models.Example{example.toModel()},
@@ -355,9 +355,9 @@ func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, traceID, spanID
 	evalName := "async_trace_evaluate_" + spanID
 
 	return &models.TraceEvaluationRun{
-		Id:          uuid.New().String(),
-		ProjectName: b.projectName,
-		EvalName:    evalName,
+		Id:              uuid.New().String(),
+		ProjectName:     b.projectName,
+		EvalName:        evalName,
 		TraceAndSpanIds: [][]any{{traceID, spanID}},
 		JudgmentScorers: []models.ScorerConfig{*scorer.GetScorerConfig()},
 		CustomScorers:   []models.BaseScorer{},

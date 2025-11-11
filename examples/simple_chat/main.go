@@ -125,7 +125,6 @@ func main() {
 			ctx := context.Background()
 			tracer, err = client.Tracer.Create(ctx, v1.TracerCreateParams{
 				ProjectName: "default_project",
-				Initialize:  v1.Bool(true),
 			})
 			if err != nil {
 				fmt.Printf("Warning: Failed to initialize tracer: %v\n", err)
