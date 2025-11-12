@@ -1,6 +1,6 @@
 {
   "name": "judgeval-go",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "format": "go fmt ./...",
@@ -11,6 +11,7 @@
     "generate:client": "npm run generate:client:raw && npm run format",
     "generate:client:raw": "bash scripts/generate-client.sh",
     "test": "go test ./...",
+    "build": "go build ./...",
     "install": "go install ./...",
     "example": "dotenv -e .env -- ./scripts/run-example.sh",
     "ci": "npm run format:check && npm run test && npm run build"
