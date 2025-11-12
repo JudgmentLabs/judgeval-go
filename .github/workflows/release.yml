@@ -2,39 +2,58 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    paths:
+      - "VERSION"
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.23"
 
-      - name: Get version from tag
+      - name: Get version from VERSION file
         id: version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          if [ -z "$VERSION" ]; then
+            echo "Error: VERSION file is empty"
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
-      - name: Verify VERSION file matches tag
+      - name: Check if tag exists
+        id: check_tag
         run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/v}
-          FILE_VERSION=$(cat VERSION | tr -d '[:space:]')
-          if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
-            echo "Error: VERSION file ($FILE_VERSION) does not match git tag (v$TAG_VERSION)"
-            exit 1
+          TAG="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag $TAG already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag $TAG does not exist, will create it"
           fi
-          echo "Version verification passed: $FILE_VERSION"
+
+      - name: Create and push tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
 
       - name: Download dependencies
         run: go mod download
@@ -48,6 +67,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: v${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
           body: |
             Release ${{ steps.version.outputs.version }}
