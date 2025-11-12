@@ -391,7 +391,7 @@ def generate_client_class(methods: List[Dict[str, Any]]) -> str:
         '    "net/http"',
         '    "net/url"',
         "",
-        '    "github.com/JudgmentLabs/judgeval-go/v1/internal/api/models"',
+        '    "github.com/JudgmentLabs/judgeval-go/internal/api/models"',
         ")",
         "",
         "type Client struct {",
@@ -470,7 +470,7 @@ def generate_api_files(spec: Dict[str, Any]) -> None:
     used_schemas = find_used_schemas(spec)
     schemas = spec.get("components", {}).get("schemas", {})
 
-    models_dir = "v1/internal/api/models"
+    models_dir = "internal/api/models"
     if os.path.exists(models_dir):
         print(f"Clearing existing models directory: {models_dir}", file=sys.stderr)
         shutil.rmtree(models_dir)
@@ -528,7 +528,7 @@ def generate_api_files(spec: Dict[str, Any]) -> None:
                 }
                 methods.append(method_info)
 
-    api_dir = "v1/internal/api"
+    api_dir = "internal/api"
     os.makedirs(api_dir, exist_ok=True)
 
     client_class = generate_client_class(methods)
