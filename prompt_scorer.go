@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/JudgmentLabs/judgeval-go/env"
 	"github.com/JudgmentLabs/judgeval-go/internal/api"
 	"github.com/JudgmentLabs/judgeval-go/internal/api/models"
-	"github.com/JudgmentLabs/judgeval-go/env"
 )
 
 type PromptScorerFactory struct {
