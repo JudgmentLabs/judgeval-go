@@ -1,6 +1,7 @@
 package judgeval
 
 import (
+	"maps"
 	"context"
 	"fmt"
 	"sync"
@@ -14,15 +15,6 @@ type PromptScorerFactory struct {
 	client  *api.Client
 	isTrace bool
 	cache   sync.Map
-}
-
-type PromptScorerCreateParams struct {
-	Name        string
-	Prompt      string
-	Threshold   float64
-	Options     map[string]float64
-	Model       *string
-	Description *string
 }
 
 type PromptScorer struct {
@@ -56,59 +48,22 @@ func (f *PromptScorerFactory) Get(ctx context.Context, name string) (*PromptScor
 	}
 
 	scorerModel := resp.Scorers[0]
-	scorerIsTrace := scorerModel.IsTrace
 
-	if scorerIsTrace != f.isTrace {
+	if scorerModel.IsTrace != f.isTrace {
 		expectedType := "PromptScorer"
 		actualType := "PromptScorer"
 		if f.isTrace {
 			expectedType = "TracePromptScorer"
 		}
-		if scorerIsTrace {
+		if scorerModel.IsTrace {
 			actualType = "TracePromptScorer"
 		}
 		return nil, fmt.Errorf("scorer with name %s is a %s, not a %s", name, actualType, expectedType)
 	}
 
-	scorer := f.createFromModel(&scorerModel, name)
-	f.cache.Store(cacheKey, scorer)
-
-	return scorer, nil
-}
-
-func (f *PromptScorerFactory) Create(params PromptScorerCreateParams) (*PromptScorer, error) {
-	if params.Name == "" {
-		return nil, fmt.Errorf("name is required")
-	}
-	if params.Prompt == "" {
-		return nil, fmt.Errorf("prompt is required")
-	}
-
-	model := env.JudgmentDefaultGPTModel
-	if params.Model != nil {
-		model = *params.Model
-	}
-
-	description := ""
-	if params.Description != nil {
-		description = *params.Description
-	}
-
-	return &PromptScorer{
-		name:        params.Name,
-		prompt:      params.Prompt,
-		threshold:   params.Threshold,
-		options:     params.Options,
-		model:       model,
-		description: description,
-		isTrace:     f.isTrace,
-	}, nil
-}
-
-func (f *PromptScorerFactory) createFromModel(model *models.PromptScorer, name string) *PromptScorer {
 	options := make(map[string]float64)
-	if model.Options != nil {
-		if optsMap, ok := model.Options.(map[string]interface{}); ok {
+	if scorerModel.Options != nil {
+		if optsMap, ok := scorerModel.Options.(map[string]any); ok {
 			for k, v := range optsMap {
 				if floatVal, ok := v.(float64); ok {
 					options[k] = floatVal
@@ -118,29 +73,32 @@ func (f *PromptScorerFactory) createFromModel(model *models.PromptScorer, name s
 	}
 
 	threshold := 0.5
-	if model.Threshold != 0 {
-		threshold = model.Threshold
+	if scorerModel.Threshold != 0 {
+		threshold = scorerModel.Threshold
 	}
 
 	modelName := env.JudgmentDefaultGPTModel
-	if model.Model != "" {
-		modelName = model.Model
+	if scorerModel.Model != "" {
+		modelName = scorerModel.Model
 	}
 
 	description := ""
-	if model.Description != "" {
-		description = model.Description
+	if scorerModel.Description != "" {
+		description = scorerModel.Description
 	}
 
-	return &PromptScorer{
+	scorer := &PromptScorer{
 		name:        name,
-		prompt:      model.Prompt,
+		prompt:      scorerModel.Prompt,
 		threshold:   threshold,
 		options:     options,
 		model:       modelName,
 		description: description,
 		isTrace:     f.isTrace,
 	}
+
+	f.cache.Store(cacheKey, scorer)
+	return scorer, nil
 }
 
 func (f *PromptScorerFactory) buildCacheKey(name string) string {
@@ -161,9 +119,7 @@ func (s *PromptScorer) GetThreshold() float64 {
 
 func (s *PromptScorer) GetOptions() map[string]float64 {
 	optsCopy := make(map[string]float64)
-	for k, v := range s.options {
-		optsCopy[k] = v
-	}
+	maps.Copy(optsCopy, s.options)
 	return optsCopy
 }
 
@@ -189,9 +145,7 @@ func (s *PromptScorer) SetModel(model string) {
 
 func (s *PromptScorer) SetOptions(options map[string]float64) {
 	s.options = make(map[string]float64)
-	for k, v := range options {
-		s.options[k] = v
-	}
+	maps.Copy(s.options, options)
 }
 
 func (s *PromptScorer) SetDescription(description string) {

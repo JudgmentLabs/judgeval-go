@@ -17,12 +17,12 @@ type CustomScorer struct {
 	serverHosted bool
 }
 
-func (f *CustomScorerFactory) Get(name string, className string) *CustomScorer {
+func (f *CustomScorerFactory) Get(name string, className string) (*CustomScorer, error) {
 	return &CustomScorer{
 		name:         name,
 		className:    className,
 		serverHosted: true,
-	}
+	}, nil
 }
 
 func (s *CustomScorer) GetName() string {
