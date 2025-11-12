@@ -21,4 +21,3 @@ func getEnvVar(varName string, defaultValue ...string) string {
 	}
 	return ""
 }
-

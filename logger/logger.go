@@ -112,4 +112,3 @@ func Error(format string, args ...interface{}) {
 func Critical(format string, args ...interface{}) {
 	log(CRITICAL, format, args...)
 }
-
