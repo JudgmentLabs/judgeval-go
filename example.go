@@ -8,31 +8,28 @@ import (
 	"github.com/google/uuid"
 )
 
-type ExampleParams struct {
-	Name       *string
-	Properties map[string]interface{}
-}
+type ExampleParams map[string]any
 
 type Example struct {
 	exampleID  string
 	createdAt  string
 	name       *string
-	properties map[string]interface{}
+	properties map[string]any
 }
 
 func NewExample(params ExampleParams) *Example {
 	exampleID := uuid.New().String()
 	createdAt := time.Now().Format(time.RFC3339)
 
-	properties := make(map[string]interface{})
-	if params.Properties != nil {
-		maps.Copy(properties, params.Properties)
+	properties := make(map[string]any)
+	if params != nil {
+		maps.Copy(properties, params)
 	}
 
 	return &Example{
 		exampleID:  exampleID,
 		createdAt:  createdAt,
-		name:       params.Name,
+		name:       nil,
 		properties: properties,
 	}
 }
@@ -79,9 +76,7 @@ func (e *Example) toModel() models.Example {
 		result.Name = *e.name
 	}
 
-	for k, v := range e.properties {
-		result.AdditionalProperties[k] = v
-	}
+	maps.Copy(result.AdditionalProperties, e.properties)
 
 	return result
 }

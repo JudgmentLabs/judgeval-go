@@ -70,11 +70,9 @@ func main() {
 	})
 
 	example := v1.NewExample(v1.ExampleParams{
-		Properties: map[string]any{
-			"input":           userInput,
-			"actual_output":   output,
-			"expected_output": "Paris",
-		},
+		"input":           userInput,
+		"actual_output":   output,
+		"expected_output": "Paris",
 	})
 
 	tracer.AsyncEvaluate(spanCtx, scorer, example)

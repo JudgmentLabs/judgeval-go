@@ -45,7 +45,7 @@ func main() {
     }
     defer tracer.Shutdown(ctx)
 
-    spanCtx, span := tracer.Span(ctx, "my-operation")
+    _, span := tracer.Span(ctx, "my-operation")
     defer span.End()
 
     tracer.SetInput(span, "user input data")
@@ -88,11 +88,9 @@ func main() {
     })
 
     example := judgeval.NewExample(judgeval.ExampleParams{
-        Properties: map[string]any{
-            "input":           "What is 2+2?",
-            "actual_output":   "4",
-            "expected_output": "4",
-        },
+        "input":           "What is 2+2?",
+        "actual_output":   "4",
+        "expected_output": "4",
     })
 
     spanCtx, span := tracer.Span(ctx, "evaluation")
