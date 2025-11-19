@@ -10,14 +10,14 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-type judgmentSpanExporter struct {
+type JudgmentSpanExporter struct {
 	delegate sdktrace.SpanExporter
 }
 
-func newJudgmentSpanExporter(ctx context.Context, endpoint string, apiClient *api.Client, projectID string) sdktrace.SpanExporter {
+func NewJudgmentSpanExporter(ctx context.Context, endpoint string, apiClient *api.Client, projectID string) sdktrace.SpanExporter {
 	if projectID == "" {
 		logger.Error("projectID is required for JudgmentSpanExporter")
-		return newNoOpSpanExporter()
+		return NewNoOpSpanExporter()
 	}
 
 	headers := map[string]string{
@@ -33,34 +33,34 @@ func newJudgmentSpanExporter(ctx context.Context, endpoint string, apiClient *ap
 	)
 	if err != nil {
 		logger.Error("Failed to create OTLP HTTP exporter: %v", err)
-		return newNoOpSpanExporter()
+		return NewNoOpSpanExporter()
 	}
 
-	return &judgmentSpanExporter{
+	return &JudgmentSpanExporter{
 		delegate: exporter,
 	}
 }
 
-func (e *judgmentSpanExporter) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
+func (e *JudgmentSpanExporter) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
 	logger.Info("Exported %d spans", len(spans))
 	return e.delegate.ExportSpans(ctx, spans)
 }
 
-func (e *judgmentSpanExporter) Shutdown(ctx context.Context) error {
+func (e *JudgmentSpanExporter) Shutdown(ctx context.Context) error {
 	return e.delegate.Shutdown(ctx)
 }
 
-type noOpSpanExporter struct{}
+type NoOpSpanExporter struct{}
 
-func newNoOpSpanExporter() sdktrace.SpanExporter {
-	return &noOpSpanExporter{}
+func NewNoOpSpanExporter() sdktrace.SpanExporter {
+	return &NoOpSpanExporter{}
 }
 
-func (e *noOpSpanExporter) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
+func (e *NoOpSpanExporter) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
 	logger.Warning("NoOpSpanExporter: discarding %d spans", len(spans))
 	return nil
 }
 
-func (e *noOpSpanExporter) Shutdown(ctx context.Context) error {
+func (e *NoOpSpanExporter) Shutdown(ctx context.Context) error {
 	return nil
 }
