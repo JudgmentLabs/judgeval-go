@@ -10,7 +10,7 @@ type JudgmentSpanProcessor struct {
 	delegate sdktrace.SpanProcessor
 }
 
-func NewJudgmentSpanProcessor(ctx context.Context, delegate sdktrace.SpanProcessor) sdktrace.SpanProcessor {
+func NewJudgmentSpanProcessor(delegate sdktrace.SpanProcessor) sdktrace.SpanProcessor {
 	return &JudgmentSpanProcessor{
 		delegate: delegate,
 	}

@@ -174,7 +174,7 @@ func (b *BaseTracer) getSpanProcessor(ctx context.Context) sdktrace.SpanProcesso
 	if b.projectID != "" {
 		exporter := b.getSpanExporter(ctx)
 		batchProcessor := sdktrace.NewBatchSpanProcessor(exporter)
-		return NewJudgmentSpanProcessor(ctx, batchProcessor)
+		return NewJudgmentSpanProcessor(batchProcessor)
 	}
 	logger.Error("Project not resolved; cannot create processor, returning NoOpSpanProcessor")
 	return NewNoOpSpanProcessor()
