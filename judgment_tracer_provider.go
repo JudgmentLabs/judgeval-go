@@ -14,7 +14,7 @@ type FilterTracerFunc func(name string, opts ...trace.TracerOption) bool
 
 type JudgmentTracerProvider struct {
 	embedded.TracerProvider
-	provider     *sdktrace.TracerProvider
+	delegate     *sdktrace.TracerProvider
 	filterTracer FilterTracerFunc
 }
 
@@ -33,14 +33,14 @@ func NewJudgmentTracerProvider(config *JudgmentTracerProviderConfig, opts ...sdk
 	provider := sdktrace.NewTracerProvider(opts...)
 
 	return &JudgmentTracerProvider{
-		provider:     provider,
+		delegate:     provider,
 		filterTracer: filterTracer,
 	}
 }
 
 func (j *JudgmentTracerProvider) Tracer(name string, opts ...trace.TracerOption) trace.Tracer {
 	if name == TracerName {
-		return j.provider.Tracer(name, opts...)
+		return j.delegate.Tracer(name, opts...)
 	}
 
 	defer func() {
@@ -50,7 +50,7 @@ func (j *JudgmentTracerProvider) Tracer(name string, opts ...trace.TracerOption)
 	}()
 
 	if j.filterTracer(name, opts...) {
-		return j.provider.Tracer(name, opts...)
+		return j.delegate.Tracer(name, opts...)
 	}
 
 	logger.Debug("[JudgmentTracerProvider] Returning NoOpTracer for tracer %s as it is disallowed by the filterTracer callback.", name)
@@ -58,9 +58,9 @@ func (j *JudgmentTracerProvider) Tracer(name string, opts ...trace.TracerOption)
 }
 
 func (j *JudgmentTracerProvider) Shutdown(ctx context.Context) error {
-	return j.provider.Shutdown(ctx)
+	return j.delegate.Shutdown(ctx)
 }
 
 func (j *JudgmentTracerProvider) ForceFlush(ctx context.Context) error {
-	return j.provider.ForceFlush(ctx)
+	return j.delegate.ForceFlush(ctx)
 }
