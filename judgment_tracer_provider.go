@@ -30,7 +30,7 @@ type JudgmentTracerProviderConfig struct {
 }
 
 func NewJudgmentTracerProvider(config *JudgmentTracerProviderConfig, opts ...sdktrace.TracerProviderOption) *JudgmentTracerProvider {
-	filterTracer := func(name string, opts ...trace.TracerOption) bool { return true }
+	filterTracer := func(_ string, _ ...trace.TracerOption) bool { return true }
 	if config != nil && config.FilterTracer != nil {
 		filterTracer = config.FilterTracer
 	}
