@@ -21,6 +21,11 @@ type JudgmentTracerProvider struct {
 var _ trace.TracerProvider = (*JudgmentTracerProvider)(nil)
 
 type JudgmentTracerProviderConfig struct {
+	// FilterTracer filters what tracers are allowed to be created. This is useful when you want to disable any instrumentation
+	// or control instrumentation that is automatically created by auto-instrumentations or other libraries.
+	// If set to return false, the caller will receive a NoOpTracer.
+	// The function receives the tracer name and options to check if it should be allowed.
+	// Returns true if the tracer should be allowed, false otherwise.
 	FilterTracer FilterTracerFunc
 }
 
