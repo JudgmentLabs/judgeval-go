@@ -1,9 +1,9 @@
 package judgeval
 
 import (
-	"maps"
 	"context"
 	"fmt"
+	"maps"
 	"sync"
 
 	"github.com/JudgmentLabs/judgeval-go/env"
