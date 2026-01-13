@@ -71,8 +71,6 @@ jobs:
           name: Release ${{ steps.version.outputs.version }}
           body: |
             Release ${{ steps.version.outputs.version }}
-
-            See [CHANGELOG.md](CHANGELOG.md) for details.
           draft: false
           prerelease: false
         env:
