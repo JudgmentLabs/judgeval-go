@@ -8,8 +8,8 @@ type ExampleEvaluationRun struct {
 	Id              string         `json:"id,omitempty"`
 	ProjectName     string         `json:"project_name,omitempty"`
 	EvalName        string         `json:"eval_name,omitempty"`
-	CustomScorers   []BaseScorer   `json:"custom_scorers,omitempty"`
-	JudgmentScorers []ScorerConfig `json:"judgment_scorers,omitempty"`
+	CustomScorers   []BaseScorer   `json:"custom_scorers"`
+	JudgmentScorers []ScorerConfig `json:"judgment_scorers"`
 	Model           string         `json:"model,omitempty"`
 	CreatedAt       string         `json:"created_at,omitempty"`
 	Examples        []Example      `json:"examples,omitempty"`
