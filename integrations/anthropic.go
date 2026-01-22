@@ -106,7 +106,7 @@ func setAnthropicRequestAttributes(span trace.Span, data map[string]interface{})
 		span.SetAttributes(attribute.Float64(judgeval.AttributeKeysGenAIRequestTopP, topP))
 	}
 	if topK, ok := data["top_k"].(float64); ok {
-		span.SetAttributes(attribute.Int("gen_ai.request.top_k", int(topK)))
+		span.SetAttributes(attribute.Int(judgeval.AttributeKeysGenAIRequestTopK, int(topK)))
 	}
 	if stopSequences, ok := data["stop_sequences"].([]interface{}); ok {
 		stopStrs := make([]string, 0, len(stopSequences))

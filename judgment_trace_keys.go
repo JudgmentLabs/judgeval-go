@@ -31,6 +31,7 @@ const (
 	AttributeKeysGenAIRequestTemperature            = "gen_ai.request.temperature"
 	AttributeKeysGenAIRequestMaxTokens              = "gen_ai.request.max_tokens"
 	AttributeKeysGenAIRequestTopP                   = "gen_ai.request.top_p"
+	AttributeKeysGenAIRequestTopK                   = "gen_ai.request.top_k"
 	AttributeKeysGenAIRequestFrequencyPenalty       = "gen_ai.request.frequency_penalty"
 	AttributeKeysGenAIRequestPresencePenalty        = "gen_ai.request.presence_penalty"
 	AttributeKeysGenAIRequestStopSequences          = "gen_ai.request.stop_sequences"
