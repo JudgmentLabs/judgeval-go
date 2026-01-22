@@ -146,17 +146,17 @@ func setOpenAIResponseAttributes(span trace.Span, body []byte) {
 		} else if promptTokens, ok := usage["prompt_tokens"].(float64); ok {
 			span.SetAttributes(attribute.Int(judgeval.AttributeKeysGenAIUsageInputTokens, int(promptTokens)))
 		}
-	
+
 		if outputTokens, ok := usage["output_tokens"].(float64); ok {
 			span.SetAttributes(attribute.Int(judgeval.AttributeKeysGenAIUsageOutputTokens, int(outputTokens)))
 		} else if completionTokens, ok := usage["completion_tokens"].(float64); ok {
 			span.SetAttributes(attribute.Int(judgeval.AttributeKeysGenAIUsageOutputTokens, int(completionTokens)))
 		}
-	
+
 		if totalTokens, ok := usage["total_tokens"].(float64); ok {
 			span.SetAttributes(attribute.Int(judgeval.AttributeKeysGenAIUsageTotalTokens, int(totalTokens)))
 		}
-	
+
 		if inputDetails, ok := usage["input_tokens_details"].(map[string]interface{}); ok {
 			if cachedTokens, ok := inputDetails["cached_tokens"].(float64); ok {
 				span.SetAttributes(attribute.Int(judgeval.AttributeKeysGenAIUsageCacheReadInputTokens, int(cachedTokens)))
