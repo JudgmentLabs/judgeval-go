@@ -67,6 +67,8 @@ func (f *TracerFactory) Create(ctx context.Context, params TracerCreateParams) (
 	return tracer, nil
 }
 
+var _ TracerInterface = (*Tracer)(nil)
+
 type Tracer struct {
 	*BaseTracer
 	tracerProvider     *JudgmentTracerProvider

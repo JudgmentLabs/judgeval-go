@@ -15,13 +15,13 @@ import (
 
 // OpenAIMiddleware returns an OpenAI client middleware that instruments API calls with Judgment tracing.
 // It can be used with github.com/openai/openai-go's option.WithMiddleware.
-func OpenAIMiddleware(tracer *judgeval.Tracer) func(req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
+func OpenAIMiddleware(tracer judgeval.TracerInterface) func(req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
 	return func(req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
 		return openaiInstrumentedRoundTrip(tracer, req, next)
 	}
 }
 
-func openaiInstrumentedRoundTrip(tracer *judgeval.Tracer, req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
+func openaiInstrumentedRoundTrip(tracer judgeval.TracerInterface, req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
 	ctx := req.Context()
 
 	var requestBody []byte

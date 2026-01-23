@@ -15,13 +15,13 @@ import (
 
 // AnthropicMiddleware returns an Anthropic client middleware that instruments API calls with Judgment tracing.
 // It can be used with github.com/anthropics/anthropic-sdk-go's option.WithMiddleware.
-func AnthropicMiddleware(tracer *judgeval.Tracer) func(req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
+func AnthropicMiddleware(tracer judgeval.TracerInterface) func(req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
 	return func(req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
 		return anthropicInstrumentedRoundTrip(tracer, req, next)
 	}
 }
 
-func anthropicInstrumentedRoundTrip(tracer *judgeval.Tracer, req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
+func anthropicInstrumentedRoundTrip(tracer judgeval.TracerInterface, req *http.Request, next func(req *http.Request) (*http.Response, error)) (*http.Response, error) {
 	ctx := req.Context()
 
 	var requestBody []byte
