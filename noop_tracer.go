@@ -6,12 +6,12 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
-// NoOpTracer is a no-op implementation of TracerInterface.
+// NoOpTracer is a no-op implementation of JudgevalTracer.
 type NoOpTracer struct {
 	*BaseTracer
 }
 
-var _ TracerInterface = (*NoOpTracer)(nil)
+var _ JudgevalTracer = (*NoOpTracer)(nil)
 
 func NewNoOpTracer() *NoOpTracer {
 	noopTracer := noop.NewTracerProvider().Tracer("noop")

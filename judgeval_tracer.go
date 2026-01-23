@@ -6,7 +6,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type TracerInterface interface {
+type JudgevalTracer interface {
 	Initialize(ctx context.Context) error
 	ForceFlush(ctx context.Context) error
 	Shutdown(ctx context.Context) error
