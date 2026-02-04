@@ -5,13 +5,13 @@ import (
 )
 
 type SavePromptScorerRequest struct {
-	Name        string  `json:"name,omitempty"`
-	Prompt      string  `json:"prompt,omitempty"`
-	Threshold   float64 `json:"threshold,omitempty"`
-	Model       string  `json:"model,omitempty"`
-	IsTrace     bool    `json:"is_trace,omitempty"`
-	Options     any     `json:"options,omitempty"`
-	Description string  `json:"description,omitempty"`
+	Name        string         `json:"name,omitempty"`
+	Prompt      string         `json:"prompt,omitempty"`
+	Threshold   float64        `json:"threshold,omitempty"`
+	Model       string         `json:"model,omitempty"`
+	IsTrace     bool           `json:"is_trace,omitempty"`
+	Options     map[string]any `json:"options,omitempty"`
+	Description string         `json:"description,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
 }

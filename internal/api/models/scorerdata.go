@@ -4,25 +4,25 @@ import (
 	"encoding/json"
 )
 
-type ExperimentScorer struct {
-	ScorerDataId       string         `json:"scorer_data_id,omitempty"`
+type ScorerData struct {
+	Id                 string         `json:"id,omitempty"`
 	Name               string         `json:"name,omitempty"`
-	Score              float64        `json:"score,omitempty"`
-	Success            float64        `json:"success,omitempty"`
-	Reason             string         `json:"reason,omitempty"`
-	EvaluationModel    string         `json:"evaluation_model,omitempty"`
 	Threshold          float64        `json:"threshold,omitempty"`
-	CreatedAt          string         `json:"created_at,omitempty"`
-	Error              string         `json:"error,omitempty"`
-	AdditionalMetadata map[string]any `json:"additional_metadata,omitempty"`
+	Success            bool           `json:"success,omitempty"`
+	Score              float64        `json:"score,omitempty"`
 	MinimumScoreRange  float64        `json:"minimum_score_range,omitempty"`
 	MaximumScoreRange  float64        `json:"maximum_score_range,omitempty"`
+	Reason             any            `json:"reason,omitempty"`
+	StrictMode         bool           `json:"strict_mode,omitempty"`
+	EvaluationModel    string         `json:"evaluation_model,omitempty"`
+	Error              string         `json:"error,omitempty"`
+	AdditionalMetadata map[string]any `json:"additional_metadata,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
 }
 
-func (m *ExperimentScorer) UnmarshalJSON(data []byte) error {
-	type Alias ExperimentScorer
+func (m *ScorerData) UnmarshalJSON(data []byte) error {
+	type Alias ScorerData
 	aux := &struct {
 		*Alias
 	}{
@@ -42,8 +42,8 @@ func (m *ExperimentScorer) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m ExperimentScorer) MarshalJSON() ([]byte, error) {
-	type Alias ExperimentScorer
+func (m ScorerData) MarshalJSON() ([]byte, error) {
+	type Alias ScorerData
 	aux := &struct {
 		*Alias
 	}{

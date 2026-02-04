@@ -192,7 +192,11 @@ func (c *Client) PostProjects(payload *models.AddProjectRequest) (*models.AddPro
 func (c *Client) DeleteProjects(projectId string) (*models.DeleteProjectResponse, error) {
 	path := fmt.Sprintf("/v1/projects/%s", projectId)
 	url := c.buildURL(path, nil)
-	req, err := http.NewRequest("DELETE", url, nil)
+	jsonPayload, err := json.Marshal(struct{}{})
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return nil, err
 	}
@@ -599,7 +603,11 @@ func (c *Client) PostProjectsPromptsByNameTags(projectId string, name string, pa
 func (c *Client) DeleteProjectsPromptsByNameTags(projectId string, name string, payload *models.UntagPromptRequest) (*models.UntagPromptResponse, error) {
 	path := fmt.Sprintf("/v1/projects/%s/prompts/%s/tags", projectId, name)
 	url := c.buildURL(path, nil)
-	req, err := http.NewRequest("DELETE", url, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return nil, err
 	}

@@ -5,23 +5,23 @@ import (
 )
 
 type BaseScorer struct {
-	ScoreType          string   `json:"score_type,omitempty"`
-	Name               string   `json:"name,omitempty"`
-	ClassName          string   `json:"class_name,omitempty"`
-	Score              float64  `json:"score,omitempty"`
-	MinimumScoreRange  float64  `json:"minimum_score_range,omitempty"`
-	MaximumScoreRange  float64  `json:"maximum_score_range,omitempty"`
-	ScoreBreakdown     any      `json:"score_breakdown,omitempty"`
-	Reason             any      `json:"reason,omitempty"`
-	Success            bool     `json:"success,omitempty"`
-	Model              string   `json:"model,omitempty"`
-	Error              string   `json:"error,omitempty"`
-	AdditionalMetadata any      `json:"additional_metadata,omitempty"`
-	User               string   `json:"user,omitempty"`
-	ServerHosted       bool     `json:"server_hosted,omitempty"`
-	UsingNativeModel   bool     `json:"using_native_model,omitempty"`
-	RequiredParams     []string `json:"required_params,omitempty"`
-	StrictMode         bool     `json:"strict_mode,omitempty"`
+	ScoreType          string         `json:"score_type,omitempty"`
+	Name               string         `json:"name,omitempty"`
+	ClassName          string         `json:"class_name,omitempty"`
+	Score              float64        `json:"score,omitempty"`
+	MinimumScoreRange  float64        `json:"minimum_score_range,omitempty"`
+	MaximumScoreRange  float64        `json:"maximum_score_range,omitempty"`
+	ScoreBreakdown     map[string]any `json:"score_breakdown,omitempty"`
+	Reason             any            `json:"reason,omitempty"`
+	Success            bool           `json:"success,omitempty"`
+	Model              string         `json:"model,omitempty"`
+	Error              string         `json:"error,omitempty"`
+	AdditionalMetadata map[string]any `json:"additional_metadata,omitempty"`
+	User               string         `json:"user,omitempty"`
+	ServerHosted       bool           `json:"server_hosted,omitempty"`
+	UsingNativeModel   bool           `json:"using_native_model,omitempty"`
+	RequiredParams     []string       `json:"required_params,omitempty"`
+	StrictMode         bool           `json:"strict_mode,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
 }

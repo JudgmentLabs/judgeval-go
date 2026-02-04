@@ -5,13 +5,12 @@ import (
 )
 
 type ScorerConfig struct {
-	ScoreType      string   `json:"score_type,omitempty"`
-	Name           string   `json:"name,omitempty"`
-	Threshold      float64  `json:"threshold,omitempty"`
-	Model          string   `json:"model,omitempty"`
-	RequiredParams []string `json:"required_params,omitempty"`
-	Kwargs         any      `json:"kwargs,omitempty"`
-	ResultType     string   `json:"result_type,omitempty"`
+	ScoreType      string         `json:"score_type,omitempty"`
+	Name           string         `json:"name,omitempty"`
+	Threshold      float64        `json:"threshold,omitempty"`
+	Model          string         `json:"model,omitempty"`
+	RequiredParams []string       `json:"required_params,omitempty"`
+	Kwargs         map[string]any `json:"kwargs,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
 }

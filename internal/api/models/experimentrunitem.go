@@ -8,7 +8,7 @@ type ExperimentRunItem struct {
 	OrganizationId  string             `json:"organization_id,omitempty"`
 	ExperimentRunId string             `json:"experiment_run_id,omitempty"`
 	ExampleId       string             `json:"example_id,omitempty"`
-	Data            any                `json:"data,omitempty"`
+	Data            map[string]any     `json:"data,omitempty"`
 	Name            string             `json:"name,omitempty"`
 	CreatedAt       string             `json:"created_at,omitempty"`
 	Scorers         []ExperimentScorer `json:"scorers,omitempty"`

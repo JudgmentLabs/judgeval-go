@@ -1,3 +1,3 @@
 package models
 
-type E2EFetchTraceResponse []any
+type E2EFetchTraceResponse []map[string]any

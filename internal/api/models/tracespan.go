@@ -5,24 +5,24 @@ import (
 )
 
 type TraceSpan struct {
-	OrganizationId     string  `json:"organization_id,omitempty"`
-	ProjectId          string  `json:"project_id,omitempty"`
-	UserId             string  `json:"user_id,omitempty"`
-	Timestamp          string  `json:"timestamp,omitempty"`
-	TraceId            string  `json:"trace_id,omitempty"`
-	SpanId             string  `json:"span_id,omitempty"`
-	ParentSpanId       string  `json:"parent_span_id,omitempty"`
-	TraceState         string  `json:"trace_state,omitempty"`
-	SpanName           string  `json:"span_name,omitempty"`
-	SpanKind           string  `json:"span_kind,omitempty"`
-	ServiceName        string  `json:"service_name,omitempty"`
-	ResourceAttributes any     `json:"resource_attributes,omitempty"`
-	SpanAttributes     any     `json:"span_attributes,omitempty"`
-	Duration           string  `json:"duration,omitempty"`
-	StatusCode         float64 `json:"status_code,omitempty"`
-	StatusMessage      string  `json:"status_message,omitempty"`
-	Events             []any   `json:"events,omitempty"`
-	Links              string  `json:"links,omitempty"`
+	OrganizationId     string           `json:"organization_id,omitempty"`
+	ProjectId          string           `json:"project_id,omitempty"`
+	UserId             string           `json:"user_id,omitempty"`
+	Timestamp          string           `json:"timestamp,omitempty"`
+	TraceId            string           `json:"trace_id,omitempty"`
+	SpanId             string           `json:"span_id,omitempty"`
+	ParentSpanId       string           `json:"parent_span_id,omitempty"`
+	TraceState         string           `json:"trace_state,omitempty"`
+	SpanName           string           `json:"span_name,omitempty"`
+	SpanKind           string           `json:"span_kind,omitempty"`
+	ServiceName        string           `json:"service_name,omitempty"`
+	ResourceAttributes map[string]any   `json:"resource_attributes,omitempty"`
+	SpanAttributes     map[string]any   `json:"span_attributes,omitempty"`
+	Duration           string           `json:"duration,omitempty"`
+	StatusCode         float64          `json:"status_code,omitempty"`
+	StatusMessage      string           `json:"status_message,omitempty"`
+	Events             []map[string]any `json:"events,omitempty"`
+	Links              string           `json:"links,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
 }

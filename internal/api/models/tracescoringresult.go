@@ -5,12 +5,13 @@ import (
 )
 
 type TraceScoringResult struct {
-	ScorersData    []any     `json:"scorers_data,omitempty"`
-	Name           string    `json:"name,omitempty"`
-	DataObject     TraceSpan `json:"data_object,omitempty"`
-	TraceId        string    `json:"trace_id,omitempty"`
-	RunDuration    float64   `json:"run_duration,omitempty"`
-	EvaluationCost float64   `json:"evaluation_cost,omitempty"`
+	Success        bool         `json:"success,omitempty"`
+	ScorersData    []ScorerData `json:"scorers_data,omitempty"`
+	Name           string       `json:"name,omitempty"`
+	DataObject     TraceSpan    `json:"data_object,omitempty"`
+	TraceId        string       `json:"trace_id,omitempty"`
+	RunDuration    float64      `json:"run_duration,omitempty"`
+	EvaluationCost float64      `json:"evaluation_cost,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
 }

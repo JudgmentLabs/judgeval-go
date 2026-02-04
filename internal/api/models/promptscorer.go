@@ -5,18 +5,18 @@ import (
 )
 
 type PromptScorer struct {
-	Id             string  `json:"id,omitempty"`
-	UserId         string  `json:"user_id,omitempty"`
-	OrganizationId string  `json:"organization_id,omitempty"`
-	Name           string  `json:"name,omitempty"`
-	Prompt         string  `json:"prompt,omitempty"`
-	Threshold      float64 `json:"threshold,omitempty"`
-	Model          string  `json:"model,omitempty"`
-	Options        any     `json:"options,omitempty"`
-	Description    string  `json:"description,omitempty"`
-	CreatedAt      string  `json:"created_at,omitempty"`
-	UpdatedAt      string  `json:"updated_at,omitempty"`
-	IsTrace        bool    `json:"is_trace,omitempty"`
+	Id             string         `json:"id,omitempty"`
+	UserId         string         `json:"user_id,omitempty"`
+	OrganizationId string         `json:"organization_id,omitempty"`
+	Name           string         `json:"name,omitempty"`
+	Prompt         string         `json:"prompt,omitempty"`
+	Threshold      float64        `json:"threshold,omitempty"`
+	Model          string         `json:"model,omitempty"`
+	Options        map[string]any `json:"options,omitempty"`
+	Description    string         `json:"description,omitempty"`
+	CreatedAt      string         `json:"created_at,omitempty"`
+	UpdatedAt      string         `json:"updated_at,omitempty"`
+	IsTrace        bool           `json:"is_trace,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
 }

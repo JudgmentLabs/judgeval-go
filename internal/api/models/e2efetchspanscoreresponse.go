@@ -1,3 +1,3 @@
 package models
 
-type E2EFetchSpanScoreResponse []any
+type E2EFetchSpanScoreResponse []map[string]any

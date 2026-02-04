@@ -63,13 +63,9 @@ func (f *PromptScorerFactory) Get(ctx context.Context, name string) (*PromptScor
 	}
 
 	options := make(map[string]float64)
-	if scorerModel.Options != nil {
-		if optsMap, ok := scorerModel.Options.(map[string]any); ok {
-			for k, v := range optsMap {
-				if floatVal, ok := v.(float64); ok {
-					options[k] = floatVal
-				}
-			}
+	for k, v := range scorerModel.Options {
+		if floatVal, ok := v.(float64); ok {
+			options[k] = floatVal
 		}
 	}
 

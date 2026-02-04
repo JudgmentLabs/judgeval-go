@@ -305,7 +305,7 @@ def get_go_type(schema: Dict[str, Any]) -> str:
         "integer": "int",
         "number": "float64",
         "boolean": "bool",
-        "object": "any",
+        "object": "map[string]any",
     }
 
     if schema_type == "array":
@@ -389,6 +389,17 @@ def generate_struct(className: str, schema: Dict[str, Any]) -> str:
 
 
 def generate_type_definition(class_name: str, schema: Dict[str, Any]) -> str:
+    for union_key in ["anyOf", "oneOf", "allOf"]:
+        if union_key in schema:
+            go_type = get_go_type(schema)
+            return "\n".join(
+                [
+                    "package models",
+                    "",
+                    f"type {class_name} {go_type}",
+                ]
+            )
+
     schema_type = schema.get("type", "object")
     if schema_type == "array":
         items = schema.get("items", {})
@@ -495,7 +506,7 @@ def generate_method_body(
     else:
         lines.append("    url := c.buildURL(path, nil)")
 
-    if method in ["GET", "DELETE"]:
+    if method == "GET":
         lines.extend(
             [
                 f'    req, err := http.NewRequest("{method}", url, nil)',
