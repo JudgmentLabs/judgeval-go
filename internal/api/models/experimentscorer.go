@@ -5,20 +5,20 @@ import (
 )
 
 type ExperimentScorer struct {
-	ScorerDataId       string      `json:"scorer_data_id,omitempty"`
-	Name               string      `json:"name,omitempty"`
-	Score              float64     `json:"score,omitempty"`
-	Success            float64     `json:"success,omitempty"`
-	Reason             string      `json:"reason,omitempty"`
-	EvaluationModel    string      `json:"evaluation_model,omitempty"`
-	Threshold          float64     `json:"threshold,omitempty"`
-	CreatedAt          string      `json:"created_at,omitempty"`
-	Error              string      `json:"error,omitempty"`
-	AdditionalMetadata interface{} `json:"additional_metadata,omitempty"`
-	MinimumScoreRange  float64     `json:"minimum_score_range,omitempty"`
-	MaximumScoreRange  float64     `json:"maximum_score_range,omitempty"`
+	ScorerDataId       string  `json:"scorer_data_id,omitempty"`
+	Name               string  `json:"name,omitempty"`
+	Score              float64 `json:"score,omitempty"`
+	Success            float64 `json:"success,omitempty"`
+	Reason             string  `json:"reason,omitempty"`
+	EvaluationModel    string  `json:"evaluation_model,omitempty"`
+	Threshold          float64 `json:"threshold,omitempty"`
+	CreatedAt          string  `json:"created_at,omitempty"`
+	Error              string  `json:"error,omitempty"`
+	AdditionalMetadata any     `json:"additional_metadata,omitempty"`
+	MinimumScoreRange  float64 `json:"minimum_score_range,omitempty"`
+	MaximumScoreRange  float64 `json:"maximum_score_range,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *ExperimentScorer) UnmarshalJSON(data []byte) error {
@@ -33,7 +33,7 @@ func (m *ExperimentScorer) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -50,7 +50,7 @@ func (m ExperimentScorer) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

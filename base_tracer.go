@@ -108,6 +108,22 @@ func (b *BaseTracer) SetOutput(span trace.Span, output interface{}) {
 	b.SetAttribute(span, AttributeKeysJudgmentOutput, output)
 }
 
+func (b *BaseTracer) SetCustomerID(ctx context.Context, customerID string) context.Context {
+	span := trace.SpanFromContext(ctx)
+	if span != nil && span.IsRecording() {
+		span.SetAttributes(attribute.String(AttributeKeysJudgmentCustomerID, customerID))
+	}
+	return contextWithCustomerID(ctx, customerID)
+}
+
+func (b *BaseTracer) SetSessionID(ctx context.Context, sessionID string) context.Context {
+	span := trace.SpanFromContext(ctx)
+	if span != nil && span.IsRecording() {
+		span.SetAttributes(attribute.String(AttributeKeysJudgmentSessionID, sessionID))
+	}
+	return contextWithSessionID(ctx, sessionID)
+}
+
 func (b *BaseTracer) AsyncEvaluate(ctx context.Context, scorer BaseScorer, example *Example) {
 	if !b.enableEvaluation {
 		return
@@ -174,7 +190,7 @@ func (b *BaseTracer) getSpanProcessor(ctx context.Context) sdktrace.SpanProcesso
 	if b.projectID != "" {
 		exporter := b.getSpanExporter(ctx)
 		batchProcessor := sdktrace.NewBatchSpanProcessor(exporter)
-		return NewJudgmentSpanProcessor(batchProcessor)
+		return NewJudgmentSpanProcessor(batchProcessor, lifecycleSpanProcessors())
 	}
 	logger.Error("Project not resolved; cannot create processor, returning NoOpSpanProcessor")
 	return NewNoOpSpanProcessor()

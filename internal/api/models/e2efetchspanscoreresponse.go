@@ -1,3 +1,3 @@
 package models
 
-type E2EFetchSpanScoreResponse []interface{}
+type E2EFetchSpanScoreResponse []any

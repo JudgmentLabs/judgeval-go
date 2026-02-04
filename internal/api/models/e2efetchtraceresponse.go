@@ -1,3 +1,3 @@
 package models
 
-type E2EFetchTraceResponse []interface{}
+type E2EFetchTraceResponse []any

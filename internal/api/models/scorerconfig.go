@@ -5,15 +5,15 @@ import (
 )
 
 type ScorerConfig struct {
-	ScoreType      string      `json:"score_type,omitempty"`
-	Name           string      `json:"name,omitempty"`
-	Threshold      float64     `json:"threshold,omitempty"`
-	Model          string      `json:"model,omitempty"`
-	RequiredParams []string    `json:"required_params,omitempty"`
-	Kwargs         interface{} `json:"kwargs,omitempty"`
-	ResultType     string      `json:"result_type,omitempty"`
+	ScoreType      string   `json:"score_type,omitempty"`
+	Name           string   `json:"name,omitempty"`
+	Threshold      float64  `json:"threshold,omitempty"`
+	Model          string   `json:"model,omitempty"`
+	RequiredParams []string `json:"required_params,omitempty"`
+	Kwargs         any      `json:"kwargs,omitempty"`
+	ResultType     string   `json:"result_type,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *ScorerConfig) UnmarshalJSON(data []byte) error {
@@ -28,7 +28,7 @@ func (m *ScorerConfig) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -45,7 +45,7 @@ func (m ScorerConfig) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

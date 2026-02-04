@@ -5,14 +5,14 @@ import (
 )
 
 type TraceScoringResult struct {
-	ScorersData    []ScorerData `json:"scorers_data,omitempty"`
-	Name           string       `json:"name,omitempty"`
-	DataObject     TraceSpan    `json:"data_object,omitempty"`
-	TraceId        string       `json:"trace_id,omitempty"`
-	RunDuration    float64      `json:"run_duration,omitempty"`
-	EvaluationCost float64      `json:"evaluation_cost,omitempty"`
+	ScorersData    []any     `json:"scorers_data,omitempty"`
+	Name           string    `json:"name,omitempty"`
+	DataObject     TraceSpan `json:"data_object,omitempty"`
+	TraceId        string    `json:"trace_id,omitempty"`
+	RunDuration    float64   `json:"run_duration,omitempty"`
+	EvaluationCost float64   `json:"evaluation_cost,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *TraceScoringResult) UnmarshalJSON(data []byte) error {
@@ -27,7 +27,7 @@ func (m *TraceScoringResult) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -44,7 +44,7 @@ func (m TraceScoringResult) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

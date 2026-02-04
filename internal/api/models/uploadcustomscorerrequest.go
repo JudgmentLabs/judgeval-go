@@ -13,7 +13,7 @@ type UploadCustomScorerRequest struct {
 	ScorerType       string  `json:"scorer_type,omitempty"`
 	Version          float64 `json:"version,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *UploadCustomScorerRequest) UnmarshalJSON(data []byte) error {
@@ -28,7 +28,7 @@ func (m *UploadCustomScorerRequest) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -45,7 +45,7 @@ func (m UploadCustomScorerRequest) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

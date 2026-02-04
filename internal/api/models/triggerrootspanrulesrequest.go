@@ -7,7 +7,7 @@ import (
 type TriggerRootSpanRulesRequest struct {
 	Traces []TraceInfo `json:"traces,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *TriggerRootSpanRulesRequest) UnmarshalJSON(data []byte) error {
@@ -22,7 +22,7 @@ func (m *TriggerRootSpanRulesRequest) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -39,7 +39,7 @@ func (m TriggerRootSpanRulesRequest) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

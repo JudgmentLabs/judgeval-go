@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/JudgmentLabs/judgeval-go/internal/api/models"
+	"github.com/JudgmentLabs/judgeval-go/logger"
 )
 
 type Client struct {
@@ -25,6 +26,17 @@ func NewClient(baseURL, apiKey, organizationID string) *Client {
 		organizationID: organizationID,
 		httpClient:     &http.Client{},
 	}
+}
+
+func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
+	logger.Debug("HTTP %s %s", req.Method, req.URL.String())
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		logger.Debug("HTTP error: %v", err)
+		return nil, err
+	}
+	logger.Debug("HTTP %s %s -> %d", req.Method, req.URL.String(), resp.StatusCode)
+	return resp, nil
 }
 
 func (c *Client) buildURL(path string, queryParams map[string]string) string {
@@ -57,7 +69,7 @@ func (c *Client) GetOrganizationID() string {
 	return c.organizationID
 }
 
-func (c *Client) PostOtelV1Traces() (*interface{}, error) {
+func (c *Client) PostOtelV1Traces() (*any, error) {
 	path := "/otel/v1/traces"
 	url := c.buildURL(path, nil)
 	jsonPayload, err := json.Marshal(struct{}{})
@@ -69,7 +81,7 @@ func (c *Client) PostOtelV1Traces() (*interface{}, error) {
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +92,7 @@ func (c *Client) PostOtelV1Traces() (*interface{}, error) {
 		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
 	}
 
-	var result interface{}
+	var result any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
@@ -99,7 +111,7 @@ func (c *Client) PostOtelTriggerRootSpanRules(payload *models.TriggerRootSpanRul
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +141,7 @@ func (c *Client) PostProjectsResolve(payload *models.ResolveProjectRequest) (*mo
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +171,7 @@ func (c *Client) PostProjects(payload *models.AddProjectRequest) (*models.AddPro
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +197,7 @@ func (c *Client) DeleteProjects(projectId string) (*models.DeleteProjectResponse
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +227,7 @@ func (c *Client) PostProjectsDatasets(projectId string, payload *models.CreateDa
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +253,7 @@ func (c *Client) GetProjectsDatasets(projectId string) (*models.PullAllDatasetsR
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +283,7 @@ func (c *Client) PostProjectsDatasetsByDatasetNameExamples(projectId string, dat
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +309,7 @@ func (c *Client) GetProjectsDatasetsByDatasetName(projectId string, datasetName 
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -315,7 +327,7 @@ func (c *Client) GetProjectsDatasetsByDatasetName(projectId string, datasetName 
 	return &result, nil
 }
 
-func (c *Client) PostProjectsEvaluateExamples(projectId string, payload *models.ExampleEvaluationRun) (*interface{}, error) {
+func (c *Client) PostProjectsEvaluateExamples(projectId string, payload *models.ExampleEvaluationRun) (*any, error) {
 	path := fmt.Sprintf("/v1/projects/%s/evaluate/examples", projectId)
 	url := c.buildURL(path, nil)
 	jsonPayload, err := json.Marshal(payload)
@@ -327,7 +339,7 @@ func (c *Client) PostProjectsEvaluateExamples(projectId string, payload *models.
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -338,14 +350,14 @@ func (c *Client) PostProjectsEvaluateExamples(projectId string, payload *models.
 		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
 	}
 
-	var result interface{}
+	var result any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (c *Client) PostProjectsEvaluateTraces(projectId string, payload *models.TraceEvaluationRun) (*interface{}, error) {
+func (c *Client) PostProjectsEvaluateTraces(projectId string, payload *models.TraceEvaluationRun) (*any, error) {
 	path := fmt.Sprintf("/v1/projects/%s/evaluate/traces", projectId)
 	url := c.buildURL(path, nil)
 	jsonPayload, err := json.Marshal(payload)
@@ -357,7 +369,7 @@ func (c *Client) PostProjectsEvaluateTraces(projectId string, payload *models.Tr
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +380,7 @@ func (c *Client) PostProjectsEvaluateTraces(projectId string, payload *models.Tr
 		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
 	}
 
-	var result interface{}
+	var result any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
@@ -387,7 +399,7 @@ func (c *Client) PostProjectsEvalResults(projectId string, payload *models.LogEv
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +425,7 @@ func (c *Client) GetProjectsExperimentsByRunId(projectId string, runId string) (
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -443,7 +455,7 @@ func (c *Client) PostProjectsEvalQueueExamples(projectId string, payload *models
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -473,7 +485,7 @@ func (c *Client) PostProjectsEvalQueueTraces(projectId string, payload *models.T
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -506,7 +518,7 @@ func (c *Client) GetProjectsPromptsByName(projectId string, name string, commit_
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +548,7 @@ func (c *Client) PostProjectsPrompts(projectId string, payload *models.InsertPro
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -566,7 +578,7 @@ func (c *Client) PostProjectsPromptsByNameTags(projectId string, name string, pa
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -592,7 +604,7 @@ func (c *Client) DeleteProjectsPromptsByNameTags(projectId string, name string, 
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -618,7 +630,7 @@ func (c *Client) GetProjectsPromptsByNameVersions(projectId string, name string)
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -651,7 +663,7 @@ func (c *Client) GetProjectsScorers(projectId string, names *string, is_trace *s
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -681,7 +693,7 @@ func (c *Client) PostProjectsScorers(projectId string, payload *models.SavePromp
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -707,7 +719,7 @@ func (c *Client) GetProjectsScorersByNameExists(projectId string, name string) (
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -737,7 +749,7 @@ func (c *Client) PostProjectsScorersCustom(projectId string, payload *models.Upl
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -763,7 +775,7 @@ func (c *Client) GetProjectsScorersCustomByNameExists(projectId string, name str
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -793,7 +805,7 @@ func (c *Client) PostProjectsTracesByTraceIdTags(projectId string, traceId strin
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -823,7 +835,7 @@ func (c *Client) PostE2eFetchTrace(payload *models.E2EFetchTraceRequest) (*model
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -853,7 +865,7 @@ func (c *Client) PostE2eFetchSpanScore(payload *models.E2EFetchSpanScoreRequest)
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}

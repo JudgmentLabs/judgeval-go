@@ -276,7 +276,7 @@ def find_used_schemas(
 
 def get_go_type(schema: Dict[str, Any]) -> str:
     if not isinstance(schema, dict):
-        return "interface{}"
+        return "any"
     if "$ref" in schema:
         return to_struct_name(resolve_ref(schema["$ref"]))
     if "$id" in schema:
@@ -297,7 +297,7 @@ def get_go_type(schema: Dict[str, Any]) -> str:
             if len(non_null_types) == 1:
                 return list(non_null_types)[0]
             else:
-                return "interface{}"
+                return "any"
 
     schema_type = schema.get("type", "object")
     type_mapping = {
@@ -305,14 +305,14 @@ def get_go_type(schema: Dict[str, Any]) -> str:
         "integer": "int",
         "number": "float64",
         "boolean": "bool",
-        "object": "interface{}",
+        "object": "any",
     }
 
     if schema_type == "array":
         items = schema.get("items", {})
-        return f"[]{get_go_type(items)}" if items else "[]interface{}"
+        return f"[]{get_go_type(items)}" if items else "[]any"
 
-    return type_mapping.get(schema_type, "interface{}")
+    return type_mapping.get(schema_type, "any")
 
 
 def generate_struct(className: str, schema: Dict[str, Any]) -> str:
@@ -337,7 +337,7 @@ def generate_struct(className: str, schema: Dict[str, Any]) -> str:
 
     lines.extend(
         [
-            '    AdditionalProperties map[string]interface{} `json:"-"`',
+            '    AdditionalProperties map[string]any `json:"-"`',
             "}",
             "",
             f"func (m *{className}) UnmarshalJSON(data []byte) error {{",
@@ -350,7 +350,7 @@ def generate_struct(className: str, schema: Dict[str, Any]) -> str:
             "    if err := json.Unmarshal(data, &aux); err != nil {{",
             "        return err",
             "    }}",
-            "    m.AdditionalProperties = make(map[string]interface{})",
+            "    m.AdditionalProperties = make(map[string]any)",
             "    if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {{",
             "        return err",
             "    }}",
@@ -365,7 +365,7 @@ def generate_struct(className: str, schema: Dict[str, Any]) -> str:
             "        Alias: (*Alias)(&m),",
             "    }",
             "",
-            "    result := make(map[string]interface{})",
+            "    result := make(map[string]any)",
             "",
             "    mainBytes, err := json.Marshal(aux)",
             "    if err != nil {{",
@@ -392,7 +392,7 @@ def generate_type_definition(class_name: str, schema: Dict[str, Any]) -> str:
     schema_type = schema.get("type", "object")
     if schema_type == "array":
         items = schema.get("items", {})
-        item_type = get_go_type(items) if isinstance(items, dict) else "interface{}"
+        item_type = get_go_type(items) if isinstance(items, dict) else "any"
         return "\n".join(
             [
                 "package models",
@@ -445,7 +445,7 @@ def generate_method_signature(
             params.append(f"{param['name']} *string")
 
     response_type_ref = (
-        f"models.{response_type}" if response_type != "interface{}" else response_type
+        f"models.{response_type}" if response_type != "any" else response_type
     )
     return f"func (c *Client) {method_name}({', '.join(params)}) (*{response_type_ref}, error) {{"
 
@@ -460,7 +460,7 @@ def generate_method_body(
     response_type: str,
 ) -> str:
     response_type_ref = (
-        f"models.{response_type}" if response_type != "interface{}" else response_type
+        f"models.{response_type}" if response_type != "any" else response_type
     )
     lines = []
 
@@ -523,7 +523,7 @@ def generate_method_body(
 
     lines.extend(
         [
-            "    resp, err := c.httpClient.Do(req)",
+            "    resp, err := c.doRequest(req)",
             "    if err != nil {",
             "        return nil, err",
             "    }",
@@ -558,6 +558,7 @@ def generate_client_class(methods: List[Dict[str, Any]]) -> str:
         '    "net/url"',
         "",
         '    "github.com/JudgmentLabs/judgeval-go/internal/api/models"',
+        '    "github.com/JudgmentLabs/judgeval-go/logger"',
         ")",
         "",
         "type Client struct {",
@@ -574,6 +575,17 @@ def generate_client_class(methods: List[Dict[str, Any]]) -> str:
         "        organizationID: organizationID,",
         "        httpClient:     &http.Client{},",
         "    }",
+        "}",
+        "",
+        "func (c *Client) doRequest(req *http.Request) (*http.Response, error) {",
+        '    logger.Debug("HTTP %s %s", req.Method, req.URL.String())',
+        "    resp, err := c.httpClient.Do(req)",
+        "    if err != nil {",
+        '        logger.Debug("HTTP error: %v", err)',
+        "        return nil, err",
+        "    }",
+        '    logger.Debug("HTTP %s %s -> %d", req.Method, req.URL.String(), resp.StatusCode)',
+        "    return resp, nil",
         "}",
         "",
         "func (c *Client) buildURL(path string, queryParams map[string]string) string {",
@@ -690,7 +702,7 @@ def generate_api_files(spec: Dict[str, Any]) -> None:
                     "response_type": (
                         to_struct_name(response_schema)
                         if response_schema
-                        else "interface{}"
+                        else "any"
                     ),
                 }
                 methods.append(method_info)

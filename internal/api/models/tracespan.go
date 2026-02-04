@@ -5,26 +5,26 @@ import (
 )
 
 type TraceSpan struct {
-	OrganizationId     string        `json:"organization_id,omitempty"`
-	ProjectId          string        `json:"project_id,omitempty"`
-	UserId             string        `json:"user_id,omitempty"`
-	Timestamp          string        `json:"timestamp,omitempty"`
-	TraceId            string        `json:"trace_id,omitempty"`
-	SpanId             string        `json:"span_id,omitempty"`
-	ParentSpanId       string        `json:"parent_span_id,omitempty"`
-	TraceState         string        `json:"trace_state,omitempty"`
-	SpanName           string        `json:"span_name,omitempty"`
-	SpanKind           string        `json:"span_kind,omitempty"`
-	ServiceName        string        `json:"service_name,omitempty"`
-	ResourceAttributes interface{}   `json:"resource_attributes,omitempty"`
-	SpanAttributes     interface{}   `json:"span_attributes,omitempty"`
-	Duration           string        `json:"duration,omitempty"`
-	StatusCode         float64       `json:"status_code,omitempty"`
-	StatusMessage      string        `json:"status_message,omitempty"`
-	Events             []interface{} `json:"events,omitempty"`
-	Links              string        `json:"links,omitempty"`
+	OrganizationId     string  `json:"organization_id,omitempty"`
+	ProjectId          string  `json:"project_id,omitempty"`
+	UserId             string  `json:"user_id,omitempty"`
+	Timestamp          string  `json:"timestamp,omitempty"`
+	TraceId            string  `json:"trace_id,omitempty"`
+	SpanId             string  `json:"span_id,omitempty"`
+	ParentSpanId       string  `json:"parent_span_id,omitempty"`
+	TraceState         string  `json:"trace_state,omitempty"`
+	SpanName           string  `json:"span_name,omitempty"`
+	SpanKind           string  `json:"span_kind,omitempty"`
+	ServiceName        string  `json:"service_name,omitempty"`
+	ResourceAttributes any     `json:"resource_attributes,omitempty"`
+	SpanAttributes     any     `json:"span_attributes,omitempty"`
+	Duration           string  `json:"duration,omitempty"`
+	StatusCode         float64 `json:"status_code,omitempty"`
+	StatusMessage      string  `json:"status_message,omitempty"`
+	Events             []any   `json:"events,omitempty"`
+	Links              string  `json:"links,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *TraceSpan) UnmarshalJSON(data []byte) error {
@@ -39,7 +39,7 @@ func (m *TraceSpan) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -56,7 +56,7 @@ func (m TraceSpan) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

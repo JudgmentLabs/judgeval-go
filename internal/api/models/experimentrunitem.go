@@ -8,12 +8,12 @@ type ExperimentRunItem struct {
 	OrganizationId  string             `json:"organization_id,omitempty"`
 	ExperimentRunId string             `json:"experiment_run_id,omitempty"`
 	ExampleId       string             `json:"example_id,omitempty"`
-	Data            interface{}        `json:"data,omitempty"`
+	Data            any                `json:"data,omitempty"`
 	Name            string             `json:"name,omitempty"`
 	CreatedAt       string             `json:"created_at,omitempty"`
 	Scorers         []ExperimentScorer `json:"scorers,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *ExperimentRunItem) UnmarshalJSON(data []byte) error {
@@ -28,7 +28,7 @@ func (m *ExperimentRunItem) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -45,7 +45,7 @@ func (m ExperimentRunItem) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

@@ -7,12 +7,17 @@ import (
 )
 
 type JudgmentSpanProcessor struct {
-	delegate sdktrace.SpanProcessor
+	delegate  sdktrace.SpanProcessor
+	lifecycle []sdktrace.SpanProcessor
 }
 
-func NewJudgmentSpanProcessor(delegate sdktrace.SpanProcessor) sdktrace.SpanProcessor {
+func NewJudgmentSpanProcessor(
+	delegate sdktrace.SpanProcessor,
+	lifecycle []sdktrace.SpanProcessor,
+) sdktrace.SpanProcessor {
 	return &JudgmentSpanProcessor{
-		delegate: delegate,
+		delegate:  delegate,
+		lifecycle: lifecycle,
 	}
 }
 
@@ -29,6 +34,9 @@ func (p *JudgmentSpanProcessor) Shutdown(ctx context.Context) error {
 }
 
 func (p *JudgmentSpanProcessor) OnStart(parentContext context.Context, span sdktrace.ReadWriteSpan) {
+	for _, processor := range p.lifecycle {
+		processor.OnStart(parentContext, span)
+	}
 	p.delegate.OnStart(parentContext, span)
 }
 
