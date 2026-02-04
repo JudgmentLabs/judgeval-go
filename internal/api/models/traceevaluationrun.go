@@ -6,15 +6,17 @@ import (
 
 type TraceEvaluationRun struct {
 	Id              string          `json:"id,omitempty"`
-	ProjectName     string          `json:"project_name,omitempty"`
+	ProjectId       string          `json:"project_id,omitempty"`
 	EvalName        string          `json:"eval_name,omitempty"`
-	CustomScorers   []BaseScorer    `json:"custom_scorers"`
-	JudgmentScorers []ScorerConfig  `json:"judgment_scorers"`
 	Model           string          `json:"model,omitempty"`
 	CreatedAt       string          `json:"created_at,omitempty"`
+	UserId          string          `json:"user_id,omitempty"`
+	Scorers         []interface{}   `json:"scorers,omitempty"`
+	CustomScorers   []BaseScorer    `json:"custom_scorers,omitempty"`
+	JudgmentScorers []ScorerConfig  `json:"judgment_scorers,omitempty"`
 	TraceAndSpanIds [][]interface{} `json:"trace_and_span_ids,omitempty"`
 	IsOffline       bool            `json:"is_offline,omitempty"`
-	IsBucketRun     bool            `json:"is_bucket_run,omitempty"`
+	IsBehavior      bool            `json:"is_behavior,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }

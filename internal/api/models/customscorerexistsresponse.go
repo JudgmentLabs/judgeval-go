@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 )
 
-type ResolveProjectNameRequest struct {
-	ProjectName string `json:"project_name,omitempty"`
+type CustomScorerExistsResponse struct {
+	Exists bool `json:"exists,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *ResolveProjectNameRequest) UnmarshalJSON(data []byte) error {
-	type Alias ResolveProjectNameRequest
+func (m *CustomScorerExistsResponse) UnmarshalJSON(data []byte) error {
+	type Alias CustomScorerExistsResponse
 	aux := &struct {
 		*Alias
 	}{
@@ -31,8 +31,8 @@ func (m *ResolveProjectNameRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m ResolveProjectNameRequest) MarshalJSON() ([]byte, error) {
-	type Alias ResolveProjectNameRequest
+func (m CustomScorerExistsResponse) MarshalJSON() ([]byte, error) {
+	type Alias CustomScorerExistsResponse
 	aux := &struct {
 		*Alias
 	}{

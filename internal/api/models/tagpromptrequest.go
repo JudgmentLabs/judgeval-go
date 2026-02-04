@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 )
 
-type FetchExperimentRunResponse struct {
-	Results      []ExperimentRunItem `json:"results,omitempty"`
-	UiResultsUrl string              `json:"ui_results_url,omitempty"`
+type TagPromptRequest struct {
+	CommitId string   `json:"commit_id,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
-	type Alias FetchExperimentRunResponse
+func (m *TagPromptRequest) UnmarshalJSON(data []byte) error {
+	type Alias TagPromptRequest
 	aux := &struct {
 		*Alias
 	}{
@@ -32,8 +32,8 @@ func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m FetchExperimentRunResponse) MarshalJSON() ([]byte, error) {
-	type Alias FetchExperimentRunResponse
+func (m TagPromptRequest) MarshalJSON() ([]byte, error) {
+	type Alias TagPromptRequest
 	aux := &struct {
 		*Alias
 	}{

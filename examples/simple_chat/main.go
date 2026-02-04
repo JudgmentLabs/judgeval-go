@@ -19,6 +19,7 @@ func main() {
 	}
 
 	client, err := v1.NewJudgeval(
+		"simple_chat",
 		v1.WithAPIKey(os.Getenv("JUDGMENT_API_KEY")),
 		v1.WithOrganizationID(os.Getenv("JUDGMENT_ORG_ID")),
 	)
@@ -28,9 +29,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	tracer, err := client.Tracer.Create(ctx, v1.TracerCreateParams{
-		ProjectName: "simple_chat",
-	})
+	tracer, err := client.Tracer.Create(ctx, v1.TracerCreateParams{})
 	if err != nil {
 		fmt.Printf("Error: Failed to create tracer: %v\n", err)
 		os.Exit(1)

@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 )
 
-type ScorerExistsRequest struct {
-	Name string `json:"name,omitempty"`
+type UntagPromptRequest struct {
+	Tags []string `json:"tags,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *ScorerExistsRequest) UnmarshalJSON(data []byte) error {
-	type Alias ScorerExistsRequest
+func (m *UntagPromptRequest) UnmarshalJSON(data []byte) error {
+	type Alias UntagPromptRequest
 	aux := &struct {
 		*Alias
 	}{
@@ -31,8 +31,8 @@ func (m *ScorerExistsRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m ScorerExistsRequest) MarshalJSON() ([]byte, error) {
-	type Alias ScorerExistsRequest
+func (m UntagPromptRequest) MarshalJSON() ([]byte, error) {
+	type Alias UntagPromptRequest
 	aux := &struct {
 		*Alias
 	}{

@@ -5,16 +5,18 @@ import (
 )
 
 type ScorerData struct {
-	Id                 string      `json:"id,omitempty"`
-	Name               string      `json:"name,omitempty"`
-	Threshold          float64     `json:"threshold,omitempty"`
-	Success            bool        `json:"success,omitempty"`
-	Score              float64     `json:"score,omitempty"`
-	Reason             string      `json:"reason,omitempty"`
-	StrictMode         bool        `json:"strict_mode,omitempty"`
-	EvaluationModel    string      `json:"evaluation_model,omitempty"`
-	Error              string      `json:"error,omitempty"`
-	AdditionalMetadata interface{} `json:"additional_metadata,omitempty"`
+	Id                string      `json:"id,omitempty"`
+	Name              string      `json:"name,omitempty"`
+	Threshold         float64     `json:"threshold,omitempty"`
+	Reason            interface{} `json:"reason,omitempty"`
+	EvaluationModel   string      `json:"evaluation_model,omitempty"`
+	Error             string      `json:"error,omitempty"`
+	ScoreType         string      `json:"score_type,omitempty"`
+	NumValue          float64     `json:"num_value,omitempty"`
+	BoolValue         bool        `json:"bool_value,omitempty"`
+	StrValue          string      `json:"str_value,omitempty"`
+	MinimumScoreRange interface{} `json:"minimum_score_range,omitempty"`
+	MaximumScoreRange interface{} `json:"maximum_score_range,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }

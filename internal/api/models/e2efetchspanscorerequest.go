@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 )
 
-type FetchExperimentRunResponse struct {
-	Results      []ExperimentRunItem `json:"results,omitempty"`
-	UiResultsUrl string              `json:"ui_results_url,omitempty"`
+type E2EFetchSpanScoreRequest struct {
+	ProjectName string `json:"project_name,omitempty"`
+	TraceId     string `json:"trace_id,omitempty"`
+	SpanId      string `json:"span_id,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
-	type Alias FetchExperimentRunResponse
+func (m *E2EFetchSpanScoreRequest) UnmarshalJSON(data []byte) error {
+	type Alias E2EFetchSpanScoreRequest
 	aux := &struct {
 		*Alias
 	}{
@@ -32,8 +33,8 @@ func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m FetchExperimentRunResponse) MarshalJSON() ([]byte, error) {
-	type Alias FetchExperimentRunResponse
+func (m E2EFetchSpanScoreRequest) MarshalJSON() ([]byte, error) {
+	type Alias E2EFetchSpanScoreRequest
 	aux := &struct {
 		*Alias
 	}{

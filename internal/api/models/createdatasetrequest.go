@@ -4,14 +4,17 @@ import (
 	"encoding/json"
 )
 
-type ResolveProjectNameResponse struct {
-	ProjectId string `json:"project_id,omitempty"`
+type CreateDatasetRequest struct {
+	Name        string    `json:"name,omitempty"`
+	DatasetKind string    `json:"dataset_kind,omitempty"`
+	Examples    []Example `json:"examples,omitempty"`
+	Overwrite   bool      `json:"overwrite,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *ResolveProjectNameResponse) UnmarshalJSON(data []byte) error {
-	type Alias ResolveProjectNameResponse
+func (m *CreateDatasetRequest) UnmarshalJSON(data []byte) error {
+	type Alias CreateDatasetRequest
 	aux := &struct {
 		*Alias
 	}{
@@ -31,8 +34,8 @@ func (m *ResolveProjectNameResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m ResolveProjectNameResponse) MarshalJSON() ([]byte, error) {
-	type Alias ResolveProjectNameResponse
+func (m CreateDatasetRequest) MarshalJSON() ([]byte, error) {
+	type Alias CreateDatasetRequest
 	aux := &struct {
 		*Alias
 	}{

@@ -4,15 +4,20 @@ import (
 	"encoding/json"
 )
 
-type FetchExperimentRunResponse struct {
-	Results      []ExperimentRunItem `json:"results,omitempty"`
-	UiResultsUrl string              `json:"ui_results_url,omitempty"`
+type UploadCustomScorerRequest struct {
+	ScorerName       string  `json:"scorer_name,omitempty"`
+	ScorerCode       string  `json:"scorer_code,omitempty"`
+	RequirementsText string  `json:"requirements_text,omitempty"`
+	ClassName        string  `json:"class_name,omitempty"`
+	Overwrite        bool    `json:"overwrite,omitempty"`
+	ScorerType       string  `json:"scorer_type,omitempty"`
+	Version          float64 `json:"version,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
-	type Alias FetchExperimentRunResponse
+func (m *UploadCustomScorerRequest) UnmarshalJSON(data []byte) error {
+	type Alias UploadCustomScorerRequest
 	aux := &struct {
 		*Alias
 	}{
@@ -32,8 +37,8 @@ func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m FetchExperimentRunResponse) MarshalJSON() ([]byte, error) {
-	type Alias FetchExperimentRunResponse
+func (m UploadCustomScorerRequest) MarshalJSON() ([]byte, error) {
+	type Alias UploadCustomScorerRequest
 	aux := &struct {
 		*Alias
 	}{

@@ -6,12 +6,14 @@ import (
 
 type ExampleEvaluationRun struct {
 	Id              string         `json:"id,omitempty"`
-	ProjectName     string         `json:"project_name,omitempty"`
+	ProjectId       string         `json:"project_id,omitempty"`
 	EvalName        string         `json:"eval_name,omitempty"`
-	CustomScorers   []BaseScorer   `json:"custom_scorers"`
-	JudgmentScorers []ScorerConfig `json:"judgment_scorers"`
 	Model           string         `json:"model,omitempty"`
 	CreatedAt       string         `json:"created_at,omitempty"`
+	UserId          string         `json:"user_id,omitempty"`
+	Scorers         []interface{}  `json:"scorers,omitempty"`
+	CustomScorers   []BaseScorer   `json:"custom_scorers,omitempty"`
+	JudgmentScorers []ScorerConfig `json:"judgment_scorers,omitempty"`
 	Examples        []Example      `json:"examples,omitempty"`
 	TraceSpanId     string         `json:"trace_span_id,omitempty"`
 	TraceId         string         `json:"trace_id,omitempty"`

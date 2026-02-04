@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 )
 
-type FetchExperimentRunResponse struct {
-	Results      []ExperimentRunItem `json:"results,omitempty"`
-	UiResultsUrl string              `json:"ui_results_url,omitempty"`
+type CreateDatasetResponse struct {
+	Detail string `json:"detail,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
-	type Alias FetchExperimentRunResponse
+func (m *CreateDatasetResponse) UnmarshalJSON(data []byte) error {
+	type Alias CreateDatasetResponse
 	aux := &struct {
 		*Alias
 	}{
@@ -32,8 +31,8 @@ func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m FetchExperimentRunResponse) MarshalJSON() ([]byte, error) {
-	type Alias FetchExperimentRunResponse
+func (m CreateDatasetResponse) MarshalJSON() ([]byte, error) {
+	type Alias CreateDatasetResponse
 	aux := &struct {
 		*Alias
 	}{

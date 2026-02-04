@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 )
 
-type EvalResults struct {
-	Results []ScoringResult `json:"results,omitempty"`
-	Run     interface{}     `json:"run,omitempty"`
+type ResolveProjectResponse struct {
+	ProjectId string `json:"project_id,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *EvalResults) UnmarshalJSON(data []byte) error {
-	type Alias EvalResults
+func (m *ResolveProjectResponse) UnmarshalJSON(data []byte) error {
+	type Alias ResolveProjectResponse
 	aux := &struct {
 		*Alias
 	}{
@@ -32,8 +31,8 @@ func (m *EvalResults) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m EvalResults) MarshalJSON() ([]byte, error) {
-	type Alias EvalResults
+func (m ResolveProjectResponse) MarshalJSON() ([]byte, error) {
+	type Alias ResolveProjectResponse
 	aux := &struct {
 		*Alias
 	}{

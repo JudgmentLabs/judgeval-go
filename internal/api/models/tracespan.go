@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-type OtelTraceSpan struct {
+type TraceSpan struct {
 	OrganizationId     string        `json:"organization_id,omitempty"`
 	ProjectId          string        `json:"project_id,omitempty"`
 	UserId             string        `json:"user_id,omitempty"`
@@ -18,17 +18,17 @@ type OtelTraceSpan struct {
 	ServiceName        string        `json:"service_name,omitempty"`
 	ResourceAttributes interface{}   `json:"resource_attributes,omitempty"`
 	SpanAttributes     interface{}   `json:"span_attributes,omitempty"`
-	Duration           int           `json:"duration,omitempty"`
-	StatusCode         int           `json:"status_code,omitempty"`
+	Duration           string        `json:"duration,omitempty"`
+	StatusCode         float64       `json:"status_code,omitempty"`
 	StatusMessage      string        `json:"status_message,omitempty"`
 	Events             []interface{} `json:"events,omitempty"`
-	Links              []interface{} `json:"links,omitempty"`
+	Links              string        `json:"links,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *OtelTraceSpan) UnmarshalJSON(data []byte) error {
-	type Alias OtelTraceSpan
+func (m *TraceSpan) UnmarshalJSON(data []byte) error {
+	type Alias TraceSpan
 	aux := &struct {
 		*Alias
 	}{
@@ -48,8 +48,8 @@ func (m *OtelTraceSpan) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m OtelTraceSpan) MarshalJSON() ([]byte, error) {
-	type Alias OtelTraceSpan
+func (m TraceSpan) MarshalJSON() ([]byte, error) {
+	type Alias TraceSpan
 	aux := &struct {
 		*Alias
 	}{

@@ -9,9 +9,9 @@ type ScorerConfig struct {
 	Name           string      `json:"name,omitempty"`
 	Threshold      float64     `json:"threshold,omitempty"`
 	Model          string      `json:"model,omitempty"`
-	StrictMode     bool        `json:"strict_mode,omitempty"`
 	RequiredParams []string    `json:"required_params,omitempty"`
 	Kwargs         interface{} `json:"kwargs,omitempty"`
+	ResultType     string      `json:"result_type,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }

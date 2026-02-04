@@ -128,7 +128,7 @@ func (b *BaseTracer) AsyncEvaluate(ctx context.Context, scorer BaseScorer, examp
 	evaluationRun := b.createEvaluationRun(scorer, example, traceID, spanID)
 
 	go func() {
-		if _, err := b.apiClient.AddToRunEvalQueue(evaluationRun); err != nil {
+		if _, err := b.apiClient.PostProjectsEvalQueueExamples(b.projectID, evaluationRun); err != nil {
 			logger.Error("Failed to enqueue evaluation run: %v", err)
 		}
 	}()
@@ -193,7 +193,7 @@ func (b *BaseTracer) createEvaluationRun(scorer BaseScorer, example *Example, tr
 
 	return &models.ExampleEvaluationRun{
 		Id:              uuid.New().String(),
-		ProjectName:     b.projectName,
+		ProjectId:       b.projectID,
 		EvalName:        runID,
 		TraceId:         traceID,
 		TraceSpanId:     spanID,
@@ -209,13 +209,13 @@ func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, traceID, spanID
 
 	return &models.TraceEvaluationRun{
 		Id:              uuid.New().String(),
-		ProjectName:     b.projectName,
+		ProjectId:       b.projectID,
 		EvalName:        evalName,
 		TraceAndSpanIds: [][]any{{traceID, spanID}},
 		JudgmentScorers: []models.ScorerConfig{*scorer.GetScorerConfig()},
 		CustomScorers:   []models.BaseScorer{},
 		IsOffline:       false,
-		IsBucketRun:     false,
+		IsBehavior:      false,
 		CreatedAt:       time.Now().UTC().Format(time.RFC3339),
 	}
 }

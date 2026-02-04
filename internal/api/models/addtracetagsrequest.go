@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 )
 
-type EvalResultsFetch struct {
-	ExperimentRunId string `json:"experiment_run_id,omitempty"`
-	ProjectName     string `json:"project_name,omitempty"`
+type AddTraceTagsRequest struct {
+	Tags []string `json:"tags,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *EvalResultsFetch) UnmarshalJSON(data []byte) error {
-	type Alias EvalResultsFetch
+func (m *AddTraceTagsRequest) UnmarshalJSON(data []byte) error {
+	type Alias AddTraceTagsRequest
 	aux := &struct {
 		*Alias
 	}{
@@ -32,8 +31,8 @@ func (m *EvalResultsFetch) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m EvalResultsFetch) MarshalJSON() ([]byte, error) {
-	type Alias EvalResultsFetch
+func (m AddTraceTagsRequest) MarshalJSON() ([]byte, error) {
+	type Alias AddTraceTagsRequest
 	aux := &struct {
 		*Alias
 	}{

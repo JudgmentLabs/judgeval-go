@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 )
 
-type FetchExperimentRunResponse struct {
-	Results      []ExperimentRunItem `json:"results,omitempty"`
-	UiResultsUrl string              `json:"ui_results_url,omitempty"`
+type TriggerRootSpanRulesResponse struct {
+	Success      bool    `json:"success,omitempty"`
+	QueuedTraces float64 `json:"queued_traces,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
-	type Alias FetchExperimentRunResponse
+func (m *TriggerRootSpanRulesResponse) UnmarshalJSON(data []byte) error {
+	type Alias TriggerRootSpanRulesResponse
 	aux := &struct {
 		*Alias
 	}{
@@ -32,8 +32,8 @@ func (m *FetchExperimentRunResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m FetchExperimentRunResponse) MarshalJSON() ([]byte, error) {
-	type Alias FetchExperimentRunResponse
+func (m TriggerRootSpanRulesResponse) MarshalJSON() ([]byte, error) {
+	type Alias TriggerRootSpanRulesResponse
 	aux := &struct {
 		*Alias
 	}{

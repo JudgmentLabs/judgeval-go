@@ -17,7 +17,6 @@ type PromptScorer struct {
 	CreatedAt      string      `json:"created_at,omitempty"`
 	UpdatedAt      string      `json:"updated_at,omitempty"`
 	IsTrace        bool        `json:"is_trace,omitempty"`
-	IsBucketRubric bool        `json:"is_bucket_rubric,omitempty"`
 
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
