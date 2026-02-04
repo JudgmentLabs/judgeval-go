@@ -3,10 +3,8 @@ package judgeval
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/JudgmentLabs/judgeval-go/internal/api"
-	"github.com/JudgmentLabs/judgeval-go/internal/api/models"
 	"github.com/JudgmentLabs/judgeval-go/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -162,26 +160,6 @@ func (t *Tracer) Shutdown(ctx context.Context) error {
 	t.tracerProvider = nil
 	logger.Info("Tracer shut down successfully")
 	return nil
-}
-
-func resolveProjectID(client *api.Client, projectName string) (string, error) {
-	logger.Info("Resolving project ID for project: %s", projectName)
-
-	req := &models.ResolveProjectRequest{
-		ProjectName: projectName,
-	}
-
-	resp, err := client.PostProjectsResolve(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve project ID: %w", err)
-	}
-
-	if resp.ProjectId == "" {
-		return "", fmt.Errorf("project ID not found for project: %s", projectName)
-	}
-
-	logger.Info("Resolved project ID: %s", resp.ProjectId)
-	return resp.ProjectId, nil
 }
 
 func defaultJSONSerializer(v interface{}) (string, error) {
