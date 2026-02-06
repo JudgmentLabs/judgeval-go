@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 )
 
-type ResolveProjectNameResponse struct {
-	ProjectId string `json:"project_id,omitempty"`
+type TagPromptResponse struct {
+	CommitId string `json:"commit_id,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
-func (m *ResolveProjectNameResponse) UnmarshalJSON(data []byte) error {
-	type Alias ResolveProjectNameResponse
+func (m *TagPromptResponse) UnmarshalJSON(data []byte) error {
+	type Alias TagPromptResponse
 	aux := &struct {
 		*Alias
 	}{
@@ -22,7 +22,7 @@ func (m *ResolveProjectNameResponse) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -31,15 +31,15 @@ func (m *ResolveProjectNameResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m ResolveProjectNameResponse) MarshalJSON() ([]byte, error) {
-	type Alias ResolveProjectNameResponse
+func (m TagPromptResponse) MarshalJSON() ([]byte, error) {
+	type Alias TagPromptResponse
 	aux := &struct {
 		*Alias
 	}{
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

@@ -29,6 +29,7 @@ import (
 
 func main() {
     client, err := judgeval.NewJudgeval(
+        "my-project",
         judgeval.WithAPIKey(os.Getenv("JUDGMENT_API_KEY")),
         judgeval.WithOrganizationID(os.Getenv("JUDGMENT_ORG_ID")),
     )
@@ -37,9 +38,7 @@ func main() {
     }
 
     ctx := context.Background()
-    tracer, err := client.Tracer.Create(ctx, judgeval.TracerCreateParams{
-        ProjectName: "my-project",
-    })
+    tracer, err := client.Tracer.Create(ctx, judgeval.TracerCreateParams{})
     if err != nil {
         panic(err)
     }
@@ -67,6 +66,7 @@ import (
 
 func main() {
     client, err := judgeval.NewJudgeval(
+        "my-project",
         judgeval.WithAPIKey(os.Getenv("JUDGMENT_API_KEY")),
         judgeval.WithOrganizationID(os.Getenv("JUDGMENT_ORG_ID")),
     )
@@ -75,9 +75,7 @@ func main() {
     }
 
     ctx := context.Background()
-    tracer, err := client.Tracer.Create(ctx, judgeval.TracerCreateParams{
-        ProjectName: "my-project",
-    })
+    tracer, err := client.Tracer.Create(ctx, judgeval.TracerCreateParams{})
     if err != nil {
         panic(err)
     }

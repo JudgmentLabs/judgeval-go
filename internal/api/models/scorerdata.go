@@ -5,18 +5,20 @@ import (
 )
 
 type ScorerData struct {
-	Id                 string      `json:"id,omitempty"`
-	Name               string      `json:"name,omitempty"`
-	Threshold          float64     `json:"threshold,omitempty"`
-	Success            bool        `json:"success,omitempty"`
-	Score              float64     `json:"score,omitempty"`
-	Reason             string      `json:"reason,omitempty"`
-	StrictMode         bool        `json:"strict_mode,omitempty"`
-	EvaluationModel    string      `json:"evaluation_model,omitempty"`
-	Error              string      `json:"error,omitempty"`
-	AdditionalMetadata interface{} `json:"additional_metadata,omitempty"`
+	Id                 string         `json:"id,omitempty"`
+	Name               string         `json:"name,omitempty"`
+	Threshold          float64        `json:"threshold,omitempty"`
+	Success            bool           `json:"success,omitempty"`
+	Score              float64        `json:"score,omitempty"`
+	MinimumScoreRange  float64        `json:"minimum_score_range,omitempty"`
+	MaximumScoreRange  float64        `json:"maximum_score_range,omitempty"`
+	Reason             any            `json:"reason,omitempty"`
+	StrictMode         bool           `json:"strict_mode,omitempty"`
+	EvaluationModel    string         `json:"evaluation_model,omitempty"`
+	Error              string         `json:"error,omitempty"`
+	AdditionalMetadata map[string]any `json:"additional_metadata,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *ScorerData) UnmarshalJSON(data []byte) error {
@@ -31,7 +33,7 @@ func (m *ScorerData) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -48,7 +50,7 @@ func (m ScorerData) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

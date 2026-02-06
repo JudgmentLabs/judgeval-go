@@ -55,7 +55,6 @@ func (s *apiScorer) toScorerConfig(requiredParams []string) *models.ScorerConfig
 		ScoreType:      s.scoreType.String(),
 		Threshold:      s.threshold,
 		Name:           s.name,
-		StrictMode:     s.strictMode,
 		RequiredParams: requiredParams,
 		Kwargs:         kwargs,
 		Model:          s.model,

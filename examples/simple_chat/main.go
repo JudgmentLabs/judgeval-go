@@ -19,6 +19,7 @@ func main() {
 	}
 
 	client, err := v1.NewJudgeval(
+		"simple_chat",
 		v1.WithAPIKey(os.Getenv("JUDGMENT_API_KEY")),
 		v1.WithOrganizationID(os.Getenv("JUDGMENT_ORG_ID")),
 	)
@@ -28,9 +29,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	tracer, err := client.Tracer.Create(ctx, v1.TracerCreateParams{
-		ProjectName: "simple_chat",
-	})
+	tracer, err := client.Tracer.Create(ctx, v1.TracerCreateParams{})
 	if err != nil {
 		fmt.Printf("Error: Failed to create tracer: %v\n", err)
 		os.Exit(1)
@@ -41,29 +40,20 @@ func main() {
 		tracer.Shutdown(shutdownCtx)
 	}()
 
-	spanCtx, span := tracer.Span(ctx, "chat-completion")
-	defer span.End()
+	rootCtx, rootSpan := tracer.Span(ctx, "chat-session")
+	defer rootSpan.End()
 
-	openaiClient := openai.NewClient(oaioption.WithAPIKey(apiKey))
+	rootCtx = tracer.SetCustomerID(rootCtx, "customer-123")
+	rootCtx = tracer.SetSessionID(rootCtx, "session-456")
 
 	userInput := "What is the capital of France?"
-	messages := []openai.ChatCompletionMessageParamUnion{
-		openai.SystemMessage("You are a helpful assistant."),
-		openai.UserMessage(userInput),
-	}
+	output := callLLM(rootCtx, tracer, apiKey, userInput)
 
-	response, err := openaiClient.Chat.Completions.New(spanCtx, openai.ChatCompletionNewParams{
-		Model:    openai.ChatModelGPT4o,
-		Messages: messages,
-	})
-	if err != nil {
-		fmt.Printf("Error: Chat completion failed: %v\n", err)
-		os.Exit(1)
-	}
-
-	output := response.Choices[0].Message.Content
 	fmt.Printf("Question: %s\n", userInput)
 	fmt.Printf("Answer: %s\n", output)
+
+	evalCtx, evalSpan := tracer.Span(rootCtx, "evaluation")
+	defer evalSpan.End()
 
 	scorer := client.Scorers.BuiltIn.AnswerCorrectness(v1.AnswerCorrectnessScorerParams{
 		Threshold: v1.Float(0.7),
@@ -75,7 +65,36 @@ func main() {
 		"expected_output": "Paris",
 	})
 
-	tracer.AsyncEvaluate(spanCtx, scorer, example)
+	tracer.AsyncEvaluate(evalCtx, scorer, example)
 
 	fmt.Println("\nEvaluation submitted successfully")
+}
+
+func callLLM(ctx context.Context, tracer *v1.Tracer, apiKey string, userInput string) string {
+	llmCtx, llmSpan := tracer.Span(ctx, "llm-call")
+	defer llmSpan.End()
+
+	tracer.SetLLMSpan(llmSpan)
+	tracer.SetInput(llmSpan, userInput)
+
+	openaiClient := openai.NewClient(oaioption.WithAPIKey(apiKey))
+
+	messages := []openai.ChatCompletionMessageParamUnion{
+		openai.SystemMessage("You are a helpful assistant."),
+		openai.UserMessage(userInput),
+	}
+
+	response, err := openaiClient.Chat.Completions.New(llmCtx, openai.ChatCompletionNewParams{
+		Model:    openai.ChatModelGPT4o,
+		Messages: messages,
+	})
+	if err != nil {
+		fmt.Printf("Error: Chat completion failed: %v\n", err)
+		os.Exit(1)
+	}
+
+	output := response.Choices[0].Message.Content
+	tracer.SetOutput(llmSpan, output)
+
+	return output
 }

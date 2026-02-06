@@ -3,10 +3,8 @@ package judgeval
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/JudgmentLabs/judgeval-go/internal/api"
-	"github.com/JudgmentLabs/judgeval-go/internal/api/models"
 	"github.com/JudgmentLabs/judgeval-go/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -18,11 +16,12 @@ import (
 const TracerName = "judgeval"
 
 type TracerFactory struct {
-	client *api.Client
+	client      *api.Client
+	projectName string
+	projectID   string
 }
 
 type TracerCreateParams struct {
-	ProjectName        string
 	EnableEvaluation   *bool
 	Serializer         SerializerFunc
 	ResourceAttributes map[string]any
@@ -31,25 +30,15 @@ type TracerCreateParams struct {
 }
 
 func (f *TracerFactory) Create(ctx context.Context, params TracerCreateParams) (*Tracer, error) {
-	if params.ProjectName == "" {
-		return nil, fmt.Errorf("project name is required")
-	}
-
 	serializer := params.Serializer
 	if serializer == nil {
 		serializer = defaultJSONSerializer
 	}
 
-	projectID, err := resolveProjectID(f.client, params.ProjectName)
-	if err != nil {
-		logger.Error("Failed to resolve project %s: %v. Skipping Judgment export.", params.ProjectName, err)
-		projectID = ""
-	}
-
 	tracer := &Tracer{
 		BaseTracer: &BaseTracer{
-			projectName:      params.ProjectName,
-			projectID:        projectID,
+			projectName:      f.projectName,
+			projectID:        f.projectID,
 			enableEvaluation: getBool(params.EnableEvaluation, true),
 			apiClient:        f.client,
 			serializer:       serializer,
@@ -171,26 +160,6 @@ func (t *Tracer) Shutdown(ctx context.Context) error {
 	t.tracerProvider = nil
 	logger.Info("Tracer shut down successfully")
 	return nil
-}
-
-func resolveProjectID(client *api.Client, projectName string) (string, error) {
-	logger.Info("Resolving project ID for project: %s", projectName)
-
-	req := &models.ResolveProjectNameRequest{
-		ProjectName: projectName,
-	}
-
-	resp, err := client.ProjectsResolve(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve project ID: %w", err)
-	}
-
-	if resp.ProjectId == "" {
-		return "", fmt.Errorf("project ID not found for project: %s", projectName)
-	}
-
-	logger.Info("Resolved project ID: %s", resp.ProjectId)
-	return resp.ProjectId, nil
 }
 
 func defaultJSONSerializer(v interface{}) (string, error) {

@@ -2,7 +2,8 @@
 //
 // Basic usage:
 //
-//	client, err := v1.NewClient(
+//	client, err := v1.NewJudgeval(
+//		"my-project",
 //		v1.WithAPIKey("your-api-key"),
 //		v1.WithOrganizationID("your-org-id"),
 //	)
@@ -11,7 +12,6 @@
 //	}
 //
 //	tracer, err := client.Tracer.Create(ctx, v1.TracerCreateParams{
-//		ProjectName: "my-project",
 //		Initialize: v1.Bool(true),
 //	})
 //	if err != nil {

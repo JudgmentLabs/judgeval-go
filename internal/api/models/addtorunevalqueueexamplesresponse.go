@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 )
 
-type ScorerExistsRequest struct {
-	Name string `json:"name,omitempty"`
+type AddToRunEvalQueueExamplesResponse struct {
+	Success bool   `json:"success,omitempty"`
+	Status  string `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
-func (m *ScorerExistsRequest) UnmarshalJSON(data []byte) error {
-	type Alias ScorerExistsRequest
+func (m *AddToRunEvalQueueExamplesResponse) UnmarshalJSON(data []byte) error {
+	type Alias AddToRunEvalQueueExamplesResponse
 	aux := &struct {
 		*Alias
 	}{
@@ -22,7 +24,7 @@ func (m *ScorerExistsRequest) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -31,15 +33,15 @@ func (m *ScorerExistsRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m ScorerExistsRequest) MarshalJSON() ([]byte, error) {
-	type Alias ScorerExistsRequest
+func (m AddToRunEvalQueueExamplesResponse) MarshalJSON() ([]byte, error) {
+	type Alias AddToRunEvalQueueExamplesResponse
 	aux := &struct {
 		*Alias
 	}{
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

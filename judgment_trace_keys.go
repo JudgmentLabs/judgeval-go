@@ -7,6 +7,7 @@ const (
 	AttributeKeysJudgmentOfflineMode       = "judgment.offline_mode"
 	AttributeKeysJudgmentUpdateID          = "judgment.update_id"
 	AttributeKeysJudgmentCustomerID        = "judgment.customer_id"
+	AttributeKeysJudgmentSessionID         = "judgment.session_id"
 	AttributeKeysJudgmentAgentID           = "judgment.agent_id"
 	AttributeKeysJudgmentParentAgentID     = "judgment.parent_agent_id"
 	AttributeKeysJudgmentAgentClassName    = "judgment.agent_class_name"

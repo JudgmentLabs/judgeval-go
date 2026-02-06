@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 )
 
-type EvalResultsFetch struct {
-	ExperimentRunId string `json:"experiment_run_id,omitempty"`
-	ProjectName     string `json:"project_name,omitempty"`
+type DeleteProjectResponse struct {
+	Status  string `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
-func (m *EvalResultsFetch) UnmarshalJSON(data []byte) error {
-	type Alias EvalResultsFetch
+func (m *DeleteProjectResponse) UnmarshalJSON(data []byte) error {
+	type Alias DeleteProjectResponse
 	aux := &struct {
 		*Alias
 	}{
@@ -23,7 +23,7 @@ func (m *EvalResultsFetch) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -32,15 +32,15 @@ func (m *EvalResultsFetch) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m EvalResultsFetch) MarshalJSON() ([]byte, error) {
-	type Alias EvalResultsFetch
+func (m DeleteProjectResponse) MarshalJSON() ([]byte, error) {
+	type Alias DeleteProjectResponse
 	aux := &struct {
 		*Alias
 	}{
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

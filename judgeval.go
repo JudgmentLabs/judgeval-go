@@ -8,13 +8,15 @@ import (
 )
 
 type Judgeval struct {
-	apiClient  *api.Client
-	Tracer     *TracerFactory
-	Scorers    *ScorersFactory
-	Evaluation *EvaluationFactory
+	apiClient   *api.Client
+	projectName string
+	projectID   string
+	Tracer      *TracerFactory
+	Scorers     *ScorersFactory
+	Evaluation  *EvaluationFactory
 }
 
-func NewJudgeval(opts ...Option) (*Judgeval, error) {
+func NewJudgeval(projectName string, opts ...Option) (*Judgeval, error) {
 	cfg := &clientConfig{
 		apiKey: env.JudgmentAPIKey,
 		orgID:  env.JudgmentOrgID,
@@ -34,13 +36,22 @@ func NewJudgeval(opts ...Option) (*Judgeval, error) {
 	if cfg.apiURL == "" {
 		return nil, errors.New("API URL is required: set JUDGMENT_API_URL environment variable or use WithAPIURL option")
 	}
+	if projectName == "" {
+		return nil, errors.New("project name is required")
+	}
 
 	apiClient := api.NewClient(cfg.apiURL, cfg.apiKey, cfg.orgID)
+	projectID, err := resolveProjectID(apiClient, projectName)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Judgeval{
-		apiClient:  apiClient,
-		Tracer:     &TracerFactory{client: apiClient},
-		Scorers:    newScorersFactory(apiClient),
-		Evaluation: &EvaluationFactory{client: apiClient},
+		apiClient:   apiClient,
+		projectName: projectName,
+		projectID:   projectID,
+		Tracer:      &TracerFactory{client: apiClient, projectName: projectName, projectID: projectID},
+		Scorers:     newScorersFactory(apiClient, projectName, projectID),
+		Evaluation:  &EvaluationFactory{client: apiClient, projectName: projectName, projectID: projectID},
 	}, nil
 }
