@@ -689,36 +689,6 @@ func (c *Client) GetProjectsScorers(projectId string, names *string, is_trace *s
 	return &result, nil
 }
 
-func (c *Client) PostProjectsScorers(projectId string, payload *models.SavePromptScorerRequest) (*models.SavePromptScorerResponse, error) {
-	path := fmt.Sprintf("/v1/projects/%s/scorers", projectId)
-	url := c.buildURL(path, nil)
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
-	if err != nil {
-		return nil, err
-	}
-	c.setHeaders(req)
-	resp, err := c.doRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
-	}
-
-	var result models.SavePromptScorerResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
 func (c *Client) GetProjectsScorersByNameExists(projectId string, name string) (*models.ScorerExistsResponse, error) {
 	path := fmt.Sprintf("/v1/projects/%s/scorers/%s/exists", projectId, name)
 	url := c.buildURL(path, nil)

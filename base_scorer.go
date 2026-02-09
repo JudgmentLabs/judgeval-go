@@ -58,5 +58,6 @@ func (s *apiScorer) toScorerConfig(requiredParams []string) *models.ScorerConfig
 		RequiredParams: requiredParams,
 		Kwargs:         kwargs,
 		Model:          s.model,
+		ResultType:     "numeric",
 	}
 }

@@ -11,6 +11,7 @@ type ScorerConfig struct {
 	Model          string         `json:"model,omitempty"`
 	RequiredParams []string       `json:"required_params,omitempty"`
 	Kwargs         map[string]any `json:"kwargs,omitempty"`
+	ResultType     string         `json:"result_type,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
 }

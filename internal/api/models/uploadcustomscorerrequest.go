@@ -11,6 +11,7 @@ type UploadCustomScorerRequest struct {
 	ClassName        string  `json:"class_name,omitempty"`
 	Overwrite        bool    `json:"overwrite,omitempty"`
 	ScorerType       string  `json:"scorer_type,omitempty"`
+	ResponseType     string  `json:"response_type,omitempty"`
 	Version          float64 `json:"version,omitempty"`
 
 	AdditionalProperties map[string]any `json:"-"`
