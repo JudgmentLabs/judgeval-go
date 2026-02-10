@@ -4,15 +4,19 @@ import (
 	"encoding/json"
 )
 
-type EvalResults struct {
-	Results []ScoringResult `json:"results,omitempty"`
-	Run     interface{}     `json:"run,omitempty"`
+type DatasetInfo struct {
+	DatasetId string  `json:"dataset_id,omitempty"`
+	Name      string  `json:"name,omitempty"`
+	CreatedAt string  `json:"created_at,omitempty"`
+	Kind      string  `json:"kind,omitempty"`
+	Entries   float64 `json:"entries,omitempty"`
+	Creator   string  `json:"creator,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
-func (m *EvalResults) UnmarshalJSON(data []byte) error {
-	type Alias EvalResults
+func (m *DatasetInfo) UnmarshalJSON(data []byte) error {
+	type Alias DatasetInfo
 	aux := &struct {
 		*Alias
 	}{
@@ -23,7 +27,7 @@ func (m *EvalResults) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -32,15 +36,15 @@ func (m *EvalResults) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m EvalResults) MarshalJSON() ([]byte, error) {
-	type Alias EvalResults
+func (m DatasetInfo) MarshalJSON() ([]byte, error) {
+	type Alias DatasetInfo
 	aux := &struct {
 		*Alias
 	}{
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

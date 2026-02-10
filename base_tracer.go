@@ -108,6 +108,22 @@ func (b *BaseTracer) SetOutput(span trace.Span, output interface{}) {
 	b.SetAttribute(span, AttributeKeysJudgmentOutput, output)
 }
 
+func (b *BaseTracer) SetCustomerID(ctx context.Context, customerID string) context.Context {
+	span := trace.SpanFromContext(ctx)
+	if span != nil && span.IsRecording() {
+		span.SetAttributes(attribute.String(AttributeKeysJudgmentCustomerID, customerID))
+	}
+	return contextWithCustomerID(ctx, customerID)
+}
+
+func (b *BaseTracer) SetSessionID(ctx context.Context, sessionID string) context.Context {
+	span := trace.SpanFromContext(ctx)
+	if span != nil && span.IsRecording() {
+		span.SetAttributes(attribute.String(AttributeKeysJudgmentSessionID, sessionID))
+	}
+	return contextWithSessionID(ctx, sessionID)
+}
+
 func (b *BaseTracer) AsyncEvaluate(ctx context.Context, scorer BaseScorer, example *Example) {
 	if !b.enableEvaluation {
 		return
@@ -128,7 +144,7 @@ func (b *BaseTracer) AsyncEvaluate(ctx context.Context, scorer BaseScorer, examp
 	evaluationRun := b.createEvaluationRun(scorer, example, traceID, spanID)
 
 	go func() {
-		if _, err := b.apiClient.AddToRunEvalQueue(evaluationRun); err != nil {
+		if _, err := b.apiClient.PostProjectsEvalQueueExamples(b.projectID, evaluationRun); err != nil {
 			logger.Error("Failed to enqueue evaluation run: %v", err)
 		}
 	}()
@@ -174,7 +190,7 @@ func (b *BaseTracer) getSpanProcessor(ctx context.Context) sdktrace.SpanProcesso
 	if b.projectID != "" {
 		exporter := b.getSpanExporter(ctx)
 		batchProcessor := sdktrace.NewBatchSpanProcessor(exporter)
-		return NewJudgmentSpanProcessor(batchProcessor)
+		return NewJudgmentSpanProcessor(batchProcessor, lifecycleSpanProcessors())
 	}
 	logger.Error("Project not resolved; cannot create processor, returning NoOpSpanProcessor")
 	return NewNoOpSpanProcessor()
@@ -191,33 +207,49 @@ func (b *BaseTracer) buildEndpoint() string {
 func (b *BaseTracer) createEvaluationRun(scorer BaseScorer, example *Example, traceID, spanID string) *models.ExampleEvaluationRun {
 	runID := "async_evaluate_" + spanID
 
-	return &models.ExampleEvaluationRun{
+	run := &models.ExampleEvaluationRun{
 		Id:              uuid.New().String(),
-		ProjectName:     b.projectName,
+		ProjectId:       b.projectID,
 		EvalName:        runID,
 		TraceId:         traceID,
 		TraceSpanId:     spanID,
 		Examples:        []models.Example{example.toModel()},
-		JudgmentScorers: []models.ScorerConfig{*scorer.GetScorerConfig()},
+		JudgmentScorers: []models.ScorerConfig{},
 		CustomScorers:   []models.BaseScorer{},
 		CreatedAt:       time.Now().UTC().Format(time.RFC3339),
 	}
+
+	if cs, ok := scorer.(*CustomScorer); ok {
+		run.CustomScorers = []models.BaseScorer{cs.GetBaseScorer()}
+	} else {
+		run.JudgmentScorers = []models.ScorerConfig{*scorer.GetScorerConfig()}
+	}
+
+	return run
 }
 
 func (b *BaseTracer) createTraceEvaluationRun(scorer BaseScorer, traceID, spanID string) *models.TraceEvaluationRun {
 	evalName := "async_trace_evaluate_" + spanID
 
-	return &models.TraceEvaluationRun{
+	run := &models.TraceEvaluationRun{
 		Id:              uuid.New().String(),
-		ProjectName:     b.projectName,
+		ProjectId:       b.projectID,
 		EvalName:        evalName,
 		TraceAndSpanIds: [][]any{{traceID, spanID}},
-		JudgmentScorers: []models.ScorerConfig{*scorer.GetScorerConfig()},
+		JudgmentScorers: []models.ScorerConfig{},
 		CustomScorers:   []models.BaseScorer{},
 		IsOffline:       false,
-		IsBucketRun:     false,
+		IsBehavior:      false,
 		CreatedAt:       time.Now().UTC().Format(time.RFC3339),
 	}
+
+	if cs, ok := scorer.(*CustomScorer); ok {
+		run.CustomScorers = []models.BaseScorer{cs.GetBaseScorer()}
+	} else {
+		run.JudgmentScorers = []models.ScorerConfig{*scorer.GetScorerConfig()}
+	}
+
+	return run
 }
 
 func (b *BaseTracer) StartSpan(ctx context.Context, spanName string) (context.Context, trace.Span) {

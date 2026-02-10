@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 )
 
-type ResolveProjectNameRequest struct {
-	ProjectName string `json:"project_name,omitempty"`
+type DeleteProjectResponse struct {
+	Status  string `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
-func (m *ResolveProjectNameRequest) UnmarshalJSON(data []byte) error {
-	type Alias ResolveProjectNameRequest
+func (m *DeleteProjectResponse) UnmarshalJSON(data []byte) error {
+	type Alias DeleteProjectResponse
 	aux := &struct {
 		*Alias
 	}{
@@ -22,7 +23,7 @@ func (m *ResolveProjectNameRequest) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -31,15 +32,15 @@ func (m *ResolveProjectNameRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m ResolveProjectNameRequest) MarshalJSON() ([]byte, error) {
-	type Alias ResolveProjectNameRequest
+func (m DeleteProjectResponse) MarshalJSON() ([]byte, error) {
+	type Alias DeleteProjectResponse
 	aux := &struct {
 		*Alias
 	}{
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

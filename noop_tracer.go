@@ -17,7 +17,8 @@ func NewNoOpTracer() *NoOpTracer {
 	noopTracer := noop.NewTracerProvider().Tracer("noop")
 	return &NoOpTracer{
 		BaseTracer: &BaseTracer{
-			tracer: noopTracer,
+			tracer:     noopTracer,
+			serializer: defaultJSONSerializer,
 		},
 	}
 }

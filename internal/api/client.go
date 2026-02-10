@@ -9,6 +9,7 @@ import (
 	"net/url"
 
 	"github.com/JudgmentLabs/judgeval-go/internal/api/models"
+	"github.com/JudgmentLabs/judgeval-go/logger"
 )
 
 type Client struct {
@@ -25,6 +26,17 @@ func NewClient(baseURL, apiKey, organizationID string) *Client {
 		organizationID: organizationID,
 		httpClient:     &http.Client{},
 	}
+}
+
+func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
+	logger.Debug("HTTP %s %s", req.Method, req.URL.String())
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		logger.Debug("HTTP error: %v", err)
+		return nil, err
+	}
+	logger.Debug("HTTP %s %s -> %d", req.Method, req.URL.String(), resp.StatusCode)
+	return resp, nil
 }
 
 func (c *Client) buildURL(path string, queryParams map[string]string) string {
@@ -57,9 +69,10 @@ func (c *Client) GetOrganizationID() string {
 	return c.organizationID
 }
 
-func (c *Client) AddToRunEvalQueue(payload *models.ExampleEvaluationRun) (*models.EvalResults, error) {
-	url := c.buildURL("/add_to_run_eval_queue/", nil)
-	jsonPayload, err := json.Marshal(payload)
+func (c *Client) PostOtelV1Traces() (*any, error) {
+	path := "/otel/v1/traces"
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(struct{}{})
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +81,7 @@ func (c *Client) AddToRunEvalQueue(payload *models.ExampleEvaluationRun) (*model
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -79,15 +92,16 @@ func (c *Client) AddToRunEvalQueue(payload *models.ExampleEvaluationRun) (*model
 		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
 	}
 
-	var result models.EvalResults
+	var result any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (c *Client) LogEvalResults(payload *models.EvalResults) (*models.LogEvalResultsResponse, error) {
-	url := c.buildURL("/log_eval_results/", nil)
+func (c *Client) PostOtelTriggerRootSpanRules(payload *models.TriggerRootSpanRulesRequest) (*models.TriggerRootSpanRulesResponse, error) {
+	path := "/otel/trigger_root_span_rules"
+	url := c.buildURL(path, nil)
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -97,7 +111,299 @@ func (c *Client) LogEvalResults(payload *models.EvalResults) (*models.LogEvalRes
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.TriggerRootSpanRulesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsResolve(payload *models.ResolveProjectRequest) (*models.ResolveProjectResponse, error) {
+	path := "/v1/projects/resolve/"
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.ResolveProjectResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjects(payload *models.AddProjectRequest) (*models.AddProjectResponse, error) {
+	path := "/v1/projects"
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.AddProjectResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) DeleteProjects(projectId string) (*models.DeleteProjectResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s", projectId)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(struct{}{})
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.DeleteProjectResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsDatasets(projectId string, payload *models.CreateDatasetRequest) (*models.CreateDatasetResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/datasets", projectId)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.CreateDatasetResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) GetProjectsDatasets(projectId string) (*models.PullAllDatasetsResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/datasets", projectId)
+	url := c.buildURL(path, nil)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.PullAllDatasetsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsDatasetsByDatasetNameExamples(projectId string, datasetName string, payload *models.InsertExamplesRequest) (*models.InsertExamplesResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/datasets/%s/examples", projectId, datasetName)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.InsertExamplesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) GetProjectsDatasetsByDatasetName(projectId string, datasetName string) (*models.PullDatasetResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/datasets/%s", projectId, datasetName)
+	url := c.buildURL(path, nil)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.PullDatasetResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsEvaluateExamples(projectId string, payload *models.ExampleEvaluationRun) (*any, error) {
+	path := fmt.Sprintf("/v1/projects/%s/evaluate/examples", projectId)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsEvaluateTraces(projectId string, payload *models.TraceEvaluationRun) (*any, error) {
+	path := fmt.Sprintf("/v1/projects/%s/evaluate/traces", projectId)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsEvalResults(projectId string, payload *models.LogEvalResultsRequest) (*models.LogEvalResultsResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/eval-results", projectId)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -115,18 +421,15 @@ func (c *Client) LogEvalResults(payload *models.EvalResults) (*models.LogEvalRes
 	return &result, nil
 }
 
-func (c *Client) FetchExperimentRun(payload *models.EvalResultsFetch) (*models.FetchExperimentRunResponse, error) {
-	url := c.buildURL("/fetch_experiment_run/", nil)
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+func (c *Client) GetProjectsExperimentsByRunId(projectId string, runId string) (*models.FetchExperimentRunResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/experiments/%s", projectId, runId)
+	url := c.buildURL(path, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +447,9 @@ func (c *Client) FetchExperimentRun(payload *models.EvalResultsFetch) (*models.F
 	return &result, nil
 }
 
-func (c *Client) ScorerExists(payload *models.ScorerExistsRequest) (*models.ScorerExistsResponse, error) {
-	url := c.buildURL("/scorer_exists/", nil)
+func (c *Client) PostProjectsEvalQueueExamples(projectId string, payload *models.ExampleEvaluationRun) (*models.AddToRunEvalQueueExamplesResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/eval-queue/examples", projectId)
+	url := c.buildURL(path, nil)
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -155,7 +459,7 @@ func (c *Client) ScorerExists(payload *models.ScorerExistsRequest) (*models.Scor
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -166,15 +470,16 @@ func (c *Client) ScorerExists(payload *models.ScorerExistsRequest) (*models.Scor
 		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
 	}
 
-	var result models.ScorerExistsResponse
+	var result models.AddToRunEvalQueueExamplesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (c *Client) SaveScorer(payload *models.SavePromptScorerRequest) (*models.SavePromptScorerResponse, error) {
-	url := c.buildURL("/save_scorer/", nil)
+func (c *Client) PostProjectsEvalQueueTraces(projectId string, payload *models.TraceEvaluationRun) (*models.AddToRunEvalQueueTracesResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/eval-queue/traces", projectId)
+	url := c.buildURL(path, nil)
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -184,7 +489,7 @@ func (c *Client) SaveScorer(payload *models.SavePromptScorerRequest) (*models.Sa
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -195,15 +500,49 @@ func (c *Client) SaveScorer(payload *models.SavePromptScorerRequest) (*models.Sa
 		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
 	}
 
-	var result models.SavePromptScorerResponse
+	var result models.AddToRunEvalQueueTracesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (c *Client) FetchScorers(payload *models.FetchPromptScorersRequest) (*models.FetchPromptScorersResponse, error) {
-	url := c.buildURL("/fetch_scorers/", nil)
+func (c *Client) GetProjectsPromptsByName(projectId string, name string, commit_id *string, tag *string) (*models.FetchPromptResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/prompts/%s", projectId, name)
+	queryParams := make(map[string]string)
+	if commit_id != nil {
+		queryParams["commit_id"] = *commit_id
+	}
+	if tag != nil {
+		queryParams["tag"] = *tag
+	}
+	url := c.buildURL(path, queryParams)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.FetchPromptResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsPrompts(projectId string, payload *models.InsertPromptRequest) (*models.InsertPromptResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/prompts", projectId)
+	url := c.buildURL(path, nil)
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
@@ -213,7 +552,126 @@ func (c *Client) FetchScorers(payload *models.FetchPromptScorersRequest) (*model
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.InsertPromptResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsPromptsByNameTags(projectId string, name string, payload *models.TagPromptRequest) (*models.TagPromptResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/prompts/%s/tags", projectId, name)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.TagPromptResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) DeleteProjectsPromptsByNameTags(projectId string, name string, payload *models.UntagPromptRequest) (*models.UntagPromptResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/prompts/%s/tags", projectId, name)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.UntagPromptResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) GetProjectsPromptsByNameVersions(projectId string, name string) (*models.GetPromptVersionsResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/prompts/%s/versions", projectId, name)
+	url := c.buildURL(path, nil)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.GetPromptVersionsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) GetProjectsScorers(projectId string, names *string, is_trace *string) (*models.FetchPromptScorersResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/scorers", projectId)
+	queryParams := make(map[string]string)
+	if names != nil {
+		queryParams["names"] = *names
+	}
+	if is_trace != nil {
+		queryParams["is_trace"] = *is_trace
+	}
+	url := c.buildURL(path, queryParams)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -231,18 +689,15 @@ func (c *Client) FetchScorers(payload *models.FetchPromptScorersRequest) (*model
 	return &result, nil
 }
 
-func (c *Client) ProjectsResolve(payload *models.ResolveProjectNameRequest) (*models.ResolveProjectNameResponse, error) {
-	url := c.buildURL("/projects/resolve/", nil)
-	jsonPayload, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+func (c *Client) GetProjectsScorersByNameExists(projectId string, name string) (*models.ScorerExistsResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/scorers/%s/exists", projectId, name)
+	url := c.buildURL(path, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 	c.setHeaders(req)
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +708,153 @@ func (c *Client) ProjectsResolve(payload *models.ResolveProjectNameRequest) (*mo
 		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
 	}
 
-	var result models.ResolveProjectNameResponse
+	var result models.ScorerExistsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsScorersCustom(projectId string, payload *models.UploadCustomScorerRequest) (*models.UploadCustomScorerResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/scorers/custom", projectId)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.UploadCustomScorerResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) GetProjectsScorersCustomByNameExists(projectId string, name string) (*models.CustomScorerExistsResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/scorers/custom/%s/exists", projectId, name)
+	url := c.buildURL(path, nil)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.CustomScorerExistsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostProjectsTracesByTraceIdTags(projectId string, traceId string, payload *models.AddTraceTagsRequest) (*models.AddTraceTagsResponse, error) {
+	path := fmt.Sprintf("/v1/projects/%s/traces/%s/tags", projectId, traceId)
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.AddTraceTagsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostE2eFetchTrace(payload *models.E2EFetchTraceRequest) (*models.E2EFetchTraceResponse, error) {
+	path := "/v1/e2e_fetch_trace/"
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.E2EFetchTraceResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (c *Client) PostE2eFetchSpanScore(payload *models.E2EFetchSpanScoreRequest) (*models.E2EFetchSpanScoreResponse, error) {
+	path := "/v1/e2e_fetch_span_score/"
+	url := c.buildURL(path, nil)
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("HTTP Error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var result models.E2EFetchSpanScoreResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}

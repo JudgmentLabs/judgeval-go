@@ -47,3 +47,10 @@ func (s *CustomScorer) GetScorerConfig() *models.ScorerConfig {
 		},
 	}
 }
+
+func (s *CustomScorer) GetBaseScorer() models.BaseScorer {
+	return models.BaseScorer{
+		ScoreType: APIScorerTypeCustom.String(),
+		Name:      s.name,
+	}
+}

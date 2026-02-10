@@ -21,6 +21,8 @@ type JudgevalTracerLike interface {
 	SetAttributes(span trace.Span, attrs map[string]interface{})
 	SetInput(span trace.Span, input interface{})
 	SetOutput(span trace.Span, output interface{})
+	SetCustomerID(ctx context.Context, customerID string) context.Context
+	SetSessionID(ctx context.Context, sessionID string) context.Context
 	AsyncEvaluate(ctx context.Context, scorer BaseScorer, example *Example)
 	AsyncTraceEvaluate(ctx context.Context, scorer BaseScorer)
 	StartSpan(ctx context.Context, spanName string) (context.Context, trace.Span)

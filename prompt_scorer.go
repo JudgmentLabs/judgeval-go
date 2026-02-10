@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"strconv"
 	"sync"
 
 	"github.com/JudgmentLabs/judgeval-go/env"
@@ -12,9 +13,11 @@ import (
 )
 
 type PromptScorerFactory struct {
-	client  *api.Client
-	isTrace bool
-	cache   sync.Map
+	client      *api.Client
+	projectName string
+	projectID   string
+	isTrace     bool
+	cache       sync.Map
 }
 
 type PromptScorer struct {
@@ -34,11 +37,9 @@ func (f *PromptScorerFactory) Get(ctx context.Context, name string) (*PromptScor
 		return cached.(*PromptScorer), nil
 	}
 
-	req := &models.FetchPromptScorersRequest{
-		Names: []string{name},
-	}
-
-	resp, err := f.client.FetchScorers(req)
+	names := name
+	isTrace := strconv.FormatBool(f.isTrace)
+	resp, err := f.client.GetProjectsScorers(f.projectID, &names, &isTrace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch prompt scorer '%s': %w", name, err)
 	}
@@ -62,13 +63,9 @@ func (f *PromptScorerFactory) Get(ctx context.Context, name string) (*PromptScor
 	}
 
 	options := make(map[string]float64)
-	if scorerModel.Options != nil {
-		if optsMap, ok := scorerModel.Options.(map[string]any); ok {
-			for k, v := range optsMap {
-				if floatVal, ok := v.(float64); ok {
-					options[k] = floatVal
-				}
-			}
+	for k, v := range scorerModel.Options {
+		if floatVal, ok := v.(float64); ok {
+			options[k] = floatVal
 		}
 	}
 
@@ -102,7 +99,7 @@ func (f *PromptScorerFactory) Get(ctx context.Context, name string) (*PromptScor
 }
 
 func (f *PromptScorerFactory) buildCacheKey(name string) string {
-	return fmt.Sprintf("%s:%s:%s", name, f.client.GetAPIKey(), f.client.GetOrganizationID())
+	return fmt.Sprintf("%s:%s:%s:%s", f.projectID, name, f.client.GetAPIKey(), f.client.GetOrganizationID())
 }
 
 func (s *PromptScorer) GetName() string {

@@ -5,21 +5,20 @@ import (
 )
 
 type PromptScorer struct {
-	Id             string      `json:"id,omitempty"`
-	UserId         string      `json:"user_id,omitempty"`
-	OrganizationId string      `json:"organization_id,omitempty"`
-	Name           string      `json:"name,omitempty"`
-	Prompt         string      `json:"prompt,omitempty"`
-	Threshold      float64     `json:"threshold,omitempty"`
-	Model          string      `json:"model,omitempty"`
-	Options        interface{} `json:"options,omitempty"`
-	Description    string      `json:"description,omitempty"`
-	CreatedAt      string      `json:"created_at,omitempty"`
-	UpdatedAt      string      `json:"updated_at,omitempty"`
-	IsTrace        bool        `json:"is_trace,omitempty"`
-	IsBucketRubric bool        `json:"is_bucket_rubric,omitempty"`
+	Id             string         `json:"id,omitempty"`
+	UserId         string         `json:"user_id,omitempty"`
+	OrganizationId string         `json:"organization_id,omitempty"`
+	Name           string         `json:"name,omitempty"`
+	Prompt         string         `json:"prompt,omitempty"`
+	Threshold      float64        `json:"threshold,omitempty"`
+	Model          string         `json:"model,omitempty"`
+	Options        map[string]any `json:"options,omitempty"`
+	Description    string         `json:"description,omitempty"`
+	CreatedAt      string         `json:"created_at,omitempty"`
+	UpdatedAt      string         `json:"updated_at,omitempty"`
+	IsTrace        bool           `json:"is_trace,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
 func (m *PromptScorer) UnmarshalJSON(data []byte) error {
@@ -34,7 +33,7 @@ func (m *PromptScorer) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -51,7 +50,7 @@ func (m PromptScorer) MarshalJSON() ([]byte, error) {
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

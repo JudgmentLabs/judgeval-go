@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 )
 
-type SavePromptScorerResponse struct {
-	ScorerResponse PromptScorer `json:"scorer_response,omitempty"`
+type TagPromptRequest struct {
+	CommitId string   `json:"commit_id,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
-func (m *SavePromptScorerResponse) UnmarshalJSON(data []byte) error {
-	type Alias SavePromptScorerResponse
+func (m *TagPromptRequest) UnmarshalJSON(data []byte) error {
+	type Alias TagPromptRequest
 	aux := &struct {
 		*Alias
 	}{
@@ -22,7 +23,7 @@ func (m *SavePromptScorerResponse) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -31,15 +32,15 @@ func (m *SavePromptScorerResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m SavePromptScorerResponse) MarshalJSON() ([]byte, error) {
-	type Alias SavePromptScorerResponse
+func (m TagPromptRequest) MarshalJSON() ([]byte, error) {
+	type Alias TagPromptRequest
 	aux := &struct {
 		*Alias
 	}{
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {

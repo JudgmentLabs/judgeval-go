@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 )
 
-type FetchPromptScorersRequest struct {
-	Names   []string `json:"names,omitempty"`
-	IsTrace bool     `json:"is_trace,omitempty"`
+type TraceInfo struct {
+	TraceId string `json:"trace_id,omitempty"`
+	SpanId  string `json:"span_id,omitempty"`
 
-	AdditionalProperties map[string]interface{} `json:"-"`
+	AdditionalProperties map[string]any `json:"-"`
 }
 
-func (m *FetchPromptScorersRequest) UnmarshalJSON(data []byte) error {
-	type Alias FetchPromptScorersRequest
+func (m *TraceInfo) UnmarshalJSON(data []byte) error {
+	type Alias TraceInfo
 	aux := &struct {
 		*Alias
 	}{
@@ -23,7 +23,7 @@ func (m *FetchPromptScorersRequest) UnmarshalJSON(data []byte) error {
 			return err
 		}
 	}
-	m.AdditionalProperties = make(map[string]interface{})
+	m.AdditionalProperties = make(map[string]any)
 	if err := json.Unmarshal(data, &m.AdditionalProperties); err != nil {
 		{
 			return err
@@ -32,15 +32,15 @@ func (m *FetchPromptScorersRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m FetchPromptScorersRequest) MarshalJSON() ([]byte, error) {
-	type Alias FetchPromptScorersRequest
+func (m TraceInfo) MarshalJSON() ([]byte, error) {
+	type Alias TraceInfo
 	aux := &struct {
 		*Alias
 	}{
 		Alias: (*Alias)(&m),
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 
 	mainBytes, err := json.Marshal(aux)
 	if err != nil {
